@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationTitle>GroundedMolar</ApplicationTitle>
+    <AssemblyName>GroundedMolar</AssemblyName>
+    <Product>GroundedMolar</Product>
+    <Description>Offline viewer for authoritative uncollected NG+ Milk Molar locations in Grounded saves.</Description>
+    <Authors>GroundedMolar contributors</Authors>
+    <Version>1.0.0</Version>
+    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GroundedMolar.Core\GroundedMolar.Core.csproj" />
+    <Content Include="..\..\ooz.exe" Link="ooz.exe" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="Assets\T_UI_MM_MorselGeneric.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\preview\grounded-marker-free-map.png" Link="Assets\grounded-marker-free-map.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+</Project>
