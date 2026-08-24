@@ -12,14 +12,17 @@ $env:DOTNET_CLI_HOME = Join-Path $repositoryRoot '.dotnet-cli'
 $env:APPDATA = Join-Path $repositoryRoot '.appdata'
 $env:NUGET_PACKAGES = Join-Path $repositoryRoot '.nuget\packages'
 
+if (Test-Path -LiteralPath $publishRoot) {
+    Remove-Item -LiteralPath $publishRoot -Recurse -Force
+}
+
 dotnet publish (Join-Path $repositoryRoot 'src\GroundedMolar.App\GroundedMolar.App.csproj') `
     --configuration Release `
     --runtime win-x64 `
     --self-contained true `
     -p:Version=$Version `
     -p:DebugType=None `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
+    -p:PublishSingleFile=false `
     --source 'https://api.nuget.org/v3/index.json' `
     --output $publishRoot
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
@@ -43,10 +46,19 @@ foreach ($relativePath in $requiredFiles) {
     }
 }
 
+foreach ($forbiddenPath in @('GroundedMolar.Preview.exe', 'GroundedMolar.Preview.dll')) {
+    if (Test-Path -LiteralPath (Join-Path $publishRoot $forbiddenPath)) {
+        throw "Release contains excluded developer tooling: $forbiddenPath"
+    }
+}
+
 $oozHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $publishRoot 'ooz.exe')).Hash
 if ($oozHash -ne '271D3FD02E582175FF033D0A23DCA3785B6888FA21B8CD06741BA8C19B71DF41') {
     throw "Bundled ooz.exe failed integrity validation: $oozHash"
 }
+
+& (Join-Path $PSScriptRoot 'Test-PublishedRuntime.ps1') -PublishDirectory $publishRoot
+if ($LASTEXITCODE -ne 0) { throw 'Published runtime validation failed.' }
 
 if (Test-Path -LiteralPath $archivePath) { Remove-Item -LiteralPath $archivePath }
 Compress-Archive -Path (Join-Path $publishRoot '*') -DestinationPath $archivePath -CompressionLevel Optimal

@@ -33,6 +33,8 @@ public partial class MainWindow : Window
     private double _mapTop;
     private double _unapproachedOpacity = MolarMarkerOpacity.DefaultUnapproached;
     private bool _settingsApplied;
+    private CancellationTokenSource? _screenshotCancellation;
+    private CancellationTokenSource? _analysisCancellation;
 
     public MainWindow()
     {
@@ -113,7 +115,7 @@ public partial class MainWindow : Window
 
     private async Task LoadSaveAsync(bool userInitiated)
     {
-        if (_isLoading) { ScheduleReload(); return; }
+        if (_isLoading) { _analysisCancellation?.Cancel(); ScheduleReload(); return; }
         var path = _monitorFolder
             ? FindCurrentSave(_saveFolder)
             : File.Exists(SavePathBox.Text.Trim()) ? SavePathBox.Text.Trim() : null;
@@ -125,11 +127,13 @@ public partial class MainWindow : Window
         SavePathBox.Text = path;
         UpdateCurrentSavePresentation(path);
         _isLoading = true;
+        _analysisCancellation = new CancellationTokenSource();
+        var analysisCancellation = _analysisCancellation;
         RefreshButton.IsEnabled = false;
         SetConfidenceState("Status.Warning");
         try
         {
-            var analysis = await AnalyzeWithRetryAsync(path);
+            var analysis = await AnalyzeWithRetryAsync(path, analysisCancellation.Token);
             if (analysis.Confidence == SaveConfidence.Validated)
             {
                 MapPreview.Source = SaveMapImageRenderer.LoadMap(analysis);
@@ -151,13 +155,20 @@ public partial class MainWindow : Window
         {
             ScheduleReload();
         }
+        catch (OperationCanceledException) when (analysisCancellation.IsCancellationRequested) { }
         catch (Exception)
         {
             CurrentSaveSummary.Text = "This save couldn't be opened";
             SetConfidenceState("Status.Error");
             ClearPreview("The save could not be read, so no image was created.");
         }
-        finally { _isLoading = false; RefreshButton.IsEnabled = HasSaveSource(); }
+        finally
+        {
+            if (ReferenceEquals(_analysisCancellation, analysisCancellation)) _analysisCancellation = null;
+            analysisCancellation.Dispose();
+            _isLoading = false;
+            RefreshButton.IsEnabled = HasSaveSource();
+        }
     }
 
     private void ClearPreview(string message)
@@ -279,7 +290,7 @@ public partial class MainWindow : Window
         else ApplyZoom(_zoomScale);
     }
 
-    private static async Task<MolarAnalysis> AnalyzeWithRetryAsync(string path)
+    private static async Task<MolarAnalysis> AnalyzeWithRetryAsync(string path, CancellationToken cancellationToken)
     {
         var delays = new[] { 250, 500, 1000 };
         for (var attempt = 0; ; attempt++)
@@ -288,10 +299,10 @@ public partial class MainWindow : Window
             {
                 return await Task.Run(() =>
                 {
-                    return AnalysisService.Value.Analyze(path);
-                });
+                    return AnalysisService.Value.Analyze(path, cancellationToken);
+                }, cancellationToken);
             }
-            catch (Exception exception) when (attempt < delays.Length && exception is IOException or UnauthorizedAccessException) { await Task.Delay(delays[attempt]); }
+            catch (Exception exception) when (attempt < delays.Length && exception is IOException or UnauthorizedAccessException) { await Task.Delay(delays[attempt], cancellationToken); }
         }
     }
 
@@ -358,8 +369,12 @@ public partial class MainWindow : Window
         RefreshButton.IsEnabled = HasSaveSource();
     }
 
-    private void LoadSaveScreenshot(string? folder)
+    private async void LoadSaveScreenshot(string? folder)
     {
+        _screenshotCancellation?.Cancel();
+        _screenshotCancellation?.Dispose();
+        _screenshotCancellation = new CancellationTokenSource();
+        var cancellationToken = _screenshotCancellation.Token;
         SaveScreenshotPreview.Source = null;
         SaveScreenshotPlaceholder.Visibility = Visibility.Visible;
         if (folder is null) return;
@@ -368,16 +383,29 @@ public partial class MainWindow : Window
         if (screenshot is null) return;
         try
         {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.UriSource = new Uri(screenshot, UriKind.Absolute);
-            bitmap.EndInit();
-            bitmap.Freeze();
+            var bitmap = await Task.Run(() =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var encoded = GroundedScreenshotValidator.ReadValidated(screenshot);
+                cancellationToken.ThrowIfCancellationRequested();
+                using var stream = new MemoryStream(encoded, writable: false);
+                var decoded = new BitmapImage();
+                decoded.BeginInit();
+                decoded.CacheOption = BitmapCacheOption.OnLoad;
+                decoded.DecodePixelWidth = GroundedScreenshotValidator.RequiredWidth;
+                decoded.DecodePixelHeight = GroundedScreenshotValidator.RequiredHeight;
+                decoded.StreamSource = stream;
+                decoded.EndInit();
+                if (decoded.PixelWidth != GroundedScreenshotValidator.RequiredWidth || decoded.PixelHeight != GroundedScreenshotValidator.RequiredHeight)
+                    throw new InvalidDataException("Decoded screenshot dimensions changed after header validation.");
+                decoded.Freeze();
+                return decoded;
+            }, cancellationToken);
+            if (cancellationToken.IsCancellationRequested) return;
             SaveScreenshotPreview.Source = bitmap;
             SaveScreenshotPlaceholder.Visibility = Visibility.Collapsed;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException) { }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidDataException or OperationCanceledException) { }
     }
 
     private static string? MatchFolderValue(string? folder, string label)
@@ -450,5 +478,5 @@ public partial class MainWindow : Window
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
-    private void OnClosed(object? sender, EventArgs e) { _reloadTimer.Stop(); _saveWatcher?.Dispose(); }
+    private void OnClosed(object? sender, EventArgs e) { _reloadTimer.Stop(); _saveWatcher?.Dispose(); _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose(); _screenshotCancellation?.Cancel(); _screenshotCancellation?.Dispose(); }
 }

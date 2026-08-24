@@ -34,4 +34,5 @@ Current validation gate: compare either projection against one visible in-game m
 
 - Validate behavior while Grounded rewrites `World.csav` during play.
 - Add automatic Steam/Xbox save discovery.
-- Self-contained Windows x64 packaging is implemented; complete the manual Nexus upload checks in `docs/NEXUS_RELEASE.md` before publishing.
+- Security remediation is implemented in source for the 2026-08-24 audit: patched WPF runtime gating, AppContainer/Job isolation for `ooz`, bounded save processing, and bounded asynchronous screenshot validation. Complete the unavailable private-fixture, clean-machine, signing, malware-scan, and public-upload checks before declaring a release.
+- Self-contained Windows x64 packaging is implemented; complete every manual Nexus upload check in `docs/NEXUS_RELEASE.md` before publishing.

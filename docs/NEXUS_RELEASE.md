@@ -55,8 +55,9 @@ Use the Nexus permission controls consistently with `LICENSE.txt` and `THIRD_PAR
 
 ## Mandatory pre-upload checks
 
-1. Run `dotnet build` and `dotnet run --project tests/GroundedMolar.Tests`.
+1. Confirm `dotnet --info` selects SDK 10.0.303 or a later patched SDK and run `dotnet build` plus `dotnet run --project tests/GroundedMolar.Tests`.
 2. Run `powershell -ExecutionPolicy Bypass -File scripts/Publish-Nexus.ps1 -Version 1.0.0`.
+   The script deliberately publishes an inspectable, self-contained directory and refuses to create a ZIP unless the actual `PresentationCore.dll`, `PresentationFramework.dll`, and `WindowsBase.dll` product versions are 10.0.11 or newer.
 3. Test the extracted ZIP on a clean Windows 10/11 x64 machine with no .NET SDK/runtime installed.
 4. Test one supported save and one deliberately unsupported input; confirm the latter renders no markers.
 5. Confirm the app creates only `%LOCALAPPDATA%\GroundedMolar\settings.json` and temporary decoder files that are removed after use.
@@ -65,6 +66,9 @@ Use the Nexus permission controls consistently with `LICENSE.txt` and `THIRD_PAR
 8. Include the SHA-256 printed by the packaging script in the file description/changelog.
 9. Use only screenshots taken from this app or Grounded that you are entitled to publish; do not use Obsidian or Xbox logos as branding.
 10. Re-check the current Nexus File Submission Guidelines, Nexus Terms, Obsidian IP Usage Guidelines, and any Grounded/Xbox terms applicable to the uploader.
+11. Confirm the scheduled `Runtime security advisory check` is passing. Before upload, also run `scripts/Test-RuntimeAdvisories.ps1`; update both the runtime pin and the minimum publish gate when Microsoft ships a newer required security floor.
+12. Confirm `GroundedMolar.Preview.exe`/`.dll` are absent; the packaging script enforces this because Preview is developer-only and does not share the end-user screenshot validation boundary.
+13. Code-sign the app/helper/archive when a project signing identity is available. Until then, state explicitly that the binaries are unsigned, preserve the pinned helper hash/provenance disclosure, and complete SmartScreen plus exact-ZIP malware scanning rather than implying authenticity.
 
 ## Compliance assessment
 

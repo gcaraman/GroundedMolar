@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.IO;
 using System.Security.Cryptography;
 using GroundedMolar.Core;
 
@@ -76,6 +77,40 @@ Run("preview rejects non-validated analysis", () =>
     var unsupported = MolarAnalysis.Unsupported("test");
     Throws<InvalidOperationException>(() => renderer.RenderSvg(unsupported, [1, 2, 3]));
 });
+Run("screenshot headers enforce magic dimensions frame count and bounds", () =>
+{
+    GroundedScreenshotValidator.Validate(BuildWpfScreenshot(png: true));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildPngHeader(1024, 512)));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildPngHeader(512, 512)));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildPngHeader(512, 512, bitDepth: 4, colorType: 6)));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildPngHeader(512, 512, colorType: 1)));
+    var corruptPng = BuildWpfScreenshot(png: true);
+    corruptPng[^5] ^= 0x01;
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(corruptPng));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate([1, 2, 3, 4]));
+    var animated = BuildPngHeader(512, 512, animated: true);
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(animated));
+    GroundedScreenshotValidator.Validate(BuildWpfScreenshot(png: false));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildJpegHeader(512, 512)));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildJpegHeader(512, 1024)));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(BuildJpegHeader(512, 512).Concat(BuildJpegHeader(512, 512)).ToArray()));
+    Throws<InvalidDataException>(() => GroundedScreenshotValidator.Validate(new byte[GroundedScreenshotValidator.MaximumEncodedBytes + 1]));
+    WithRawFile(new byte[GroundedScreenshotValidator.MaximumEncodedBytes + 1], path =>
+        Throws<InvalidDataException>(() => GroundedScreenshotValidator.ReadValidated(path)));
+});
+Run("validated 512x512 PNG and JPEG screenshots decode through WPF", () =>
+{
+    foreach (var encoded in new[] { BuildWpfScreenshot(png: true), BuildWpfScreenshot(png: false) })
+    {
+        GroundedScreenshotValidator.Validate(encoded);
+        using var stream = new MemoryStream(encoded, writable: false);
+        var decoder = System.Windows.Media.Imaging.BitmapDecoder.Create(stream,
+            System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat,
+            System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
+        True(decoder.Frames.Count == 1, "Validated screenshot decoded with more than one WPF frame.");
+        True(decoder.Frames[0].PixelWidth == 512 && decoder.Frames[0].PixelHeight == 512, "Validated screenshot dimensions changed during WPF decode.");
+    }
+});
 Run("unsupported formats fail closed", () => { var r = new ProfiledMolarAnalyzer([], new ConservativeStateResolver()).Analyze(new byte[] { 1, 2, 3 }); True(r.Confidence == SaveConfidence.Unsupported && r.Selected.Count == 0, "Unknown bytes produced markers."); });
 Run("persistent actor state separates approach from collection", () =>
 {
@@ -110,6 +145,19 @@ Run("v1 actor lookup rejects unsupported occurrence counts", () =>
     var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes.ToArray());
     True(analysis.Confidence == SaveConfidence.Unsupported && analysis.Selected.Count == 0, "A third actor GUID occurrence did not fail closed.");
 });
+Run("actor lookup remains linear for same-prefix GUIDs and honors cancellation", () =>
+{
+    var actors = Enumerable.Range(0, 1024).Select(index => new UnrealGuid(checked((uint)(index * 256 + 0x7F)), 2, 3, 4)).ToArray();
+    var bytes = new byte[8 * 1024 * 1024];
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+    var occurrences = GroundedSaveFormatProfileV1.FindActorOccurrences(bytes, actors);
+    stopwatch.Stop();
+    True(occurrences.Count == actors.Length && occurrences.All(pair => pair.Value.Count == 0), "Worst-case lookup returned false occurrences.");
+    True(stopwatch.Elapsed < TimeSpan.FromSeconds(5), $"Linear actor lookup exceeded its 5-second regression bound: {stopwatch.Elapsed}.");
+    using var cancelled = new CancellationTokenSource();
+    cancelled.Cancel();
+    Throws<OperationCanceledException>(() => GroundedSaveFormatProfileV1.FindActorOccurrences(bytes, actors, cancelled.Token));
+});
 Run("stable analysis service reuses injected services without retaining save bytes", () =>
 {
     var decoder = new CountingSaveDecoder();
@@ -119,6 +167,12 @@ Run("stable analysis service reuses injected services without retaining save byt
     _ = service.Analyze("second");
     True(decoder.Calls == 2 && analyzer.Calls == 2, "Repeated analysis did not reuse the initialized service dependencies.");
     True(analyzer.Inputs.SequenceEqual(new byte[] { 1, 2 }), "Analysis inputs leaked mutable parse state across calls.");
+});
+Run("decoder security failures become unsupported analysis", () =>
+{
+    var service = new SaveAnalysisService(new ThrowingSaveDecoder(new TimeoutException("limit")), new CountingAnalyzer());
+    var result = service.Analyze("ignored");
+    True(result.Confidence == SaveConfidence.Unsupported && result.Selected.Count == 0, "A decoder limit failure did not fail closed as Unsupported.");
 });
 Run("discovered POIs are read atomically from the party discovery list", () =>
 {
@@ -151,8 +205,131 @@ Run("csav header is parsed atomically", () => WithCsav([10, 20, 30], [1, 2, 3, 4
     True(fake.ExpectedSize == 3, "Decoded size was not forwarded.");
 }));
 Run("truncated csav is rejected before Kraken", () => WithRawFile([1, 2, 3], path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([])).Decode(path))));
+Run("oversized physical csav is rejected before payload allocation or Kraken", () => WithRawFile(new byte[17], path =>
+{
+    var fake = new FakeKrakenDecoder([]);
+    Throws<InvalidDataException>(() => new GroundedCsavDecoder(fake, maximumDecodedSize: 16, maximumCompressedSize: 8).Decode(path));
+    True(fake.Payload is null, "The oversized physical file reached Kraken.");
+}));
+Run("oversized csav declarations fail closed", () =>
+{
+    WithRawFile(BuildContainer(17, 1, [1]), path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([]), maximumDecodedSize: 16, maximumCompressedSize: 8).Decode(path)));
+    WithRawFile(BuildContainer(1, 9, new byte[9]), path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([]), maximumDecodedSize: 16, maximumCompressedSize: 8).Decode(path)));
+});
+Run("pass-through decoded saves enforce the decoded quota", () => WithRawFile(new byte[17], path =>
+    Throws<InvalidDataException>(() => new PassThroughSaveDecoder(maximumBytes: 16).Decode(path))));
 Run("mismatched compressed size is rejected", () => WithRawFile(BuildContainer(3, 5, [1, 2]), path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([])).Decode(path))));
 Run("mismatched decoded size is rejected", () => WithCsav([1, 2, 3], [4], path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([1, 2])).Decode(path))));
+Run("ooz execution uses the hash-verified byte snapshot", () => WithTemporaryDirectory(directory =>
+{
+    var source = FindAncestorFile("ooz.exe");
+    var copy = Path.Combine(directory, "ooz.exe");
+    File.Copy(source, copy);
+    var decoder = new OozKrakenDecoder(copy);
+    File.WriteAllBytes(copy, [0x4D, 0x5A]);
+    try { decoder.Decode(new byte[] { 1 }, 1); }
+    catch (InvalidDataException e) when (e.Message.Contains("ooz.exe rejected", StringComparison.Ordinal)) { return; }
+    throw new Exception("The decoder did not launch the verified ooz.exe snapshot after its source path was replaced.");
+}));
+Run("malformed Kraken corpus stays inside the production sandbox", () =>
+{
+    var decoder = new OozKrakenDecoder(FindAncestorFile("ooz.exe"), timeout: TimeSpan.FromSeconds(5));
+    foreach (var payload in new[]
+    {
+        new byte[] { 0 },
+        new byte[] { 0xFF, 0xFF, 0xFF, 0xFF },
+        Enumerable.Range(0, 257).Select(index => checked((byte)(index % 251))).ToArray()
+    })
+        ThrowsOneOf<InvalidDataException, TimeoutException>(() => decoder.Decode(payload, 1024));
+});
+Run("staged ooz is verified and replacement-locked during launch", () => WithTemporaryDirectory(directory =>
+{
+    var executable = Path.Combine(directory, "ooz.exe");
+    var bytes = new byte[] { 1, 2, 3, 4 };
+    File.WriteAllBytes(executable, bytes);
+    var expectedHash = SHA256.HashData(bytes);
+    using (OozKrakenDecoder.OpenVerifiedExecutable(executable, expectedHash))
+    {
+        ThrowsFileAccessDenied(() => File.WriteAllBytes(executable, new byte[] { 5 }));
+        var replacement = Path.Combine(directory, "replacement.exe");
+        File.WriteAllBytes(replacement, new byte[] { 6 });
+        ThrowsFileAccessDenied(() => File.Move(replacement, executable, overwrite: true));
+    }
+    File.WriteAllBytes(executable, new byte[] { 7 });
+    Throws<InvalidDataException>(() => OozKrakenDecoder.OpenVerifiedExecutable(executable, expectedHash).Dispose());
+}));
+if (OperatingSystem.IsWindows())
+{
+    Run("production sandbox confines filesystem and denies network", () => WithTemporaryDirectory(directory =>
+    {
+        var command = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe");
+        var outside = Path.Combine(Path.GetTempPath(), $"GroundedMolar-escape-{Guid.NewGuid():N}.txt");
+        try
+        {
+            _ = WindowsSandboxedProcess.Run(command, ["/d", "/c", $"echo inside>inside.txt & echo escaped>\"{outside}\""], directory,
+                TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 64L * 1024 * 1024);
+            True(!File.Exists(Path.Combine(directory, "inside.txt")), "The stdout-only sandbox wrote inside its private directory.");
+            True(!File.Exists(outside), "The sandbox wrote outside its granted directory.");
+
+            using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+            listener.Start();
+            var endpoint = (System.Net.IPEndPoint)listener.LocalEndpoint;
+            var curl = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "curl.exe");
+            var network = WindowsSandboxedProcess.Run(curl, ["--silent", "--max-time", "1", $"http://127.0.0.1:{endpoint.Port}/"], directory,
+                TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2), 64L * 1024 * 1024);
+            True(network.ExitCode != 0 && !listener.Pending(), "The no-capability AppContainer opened a network connection.");
+        }
+        finally { File.Delete(outside); }
+    }));
+    Run("sandbox limits children CPU wall time memory diagnostics stdout and denies disk writes", () => WithTemporaryDirectory(directory =>
+    {
+        var system = Environment.GetFolderPath(Environment.SpecialFolder.System);
+        var command = Path.Combine(system, "cmd.exe");
+        var childScript = Path.Combine(directory, "child.cmd");
+        File.WriteAllText(childScript, "@echo off\r\nstart \"\" /wait cmd.exe /d /c \"echo child>child.txt\"\r\n");
+        _ = Named("child-process limit", () => WindowsSandboxedProcess.Run(command, ["/d", "/c", childScript], directory, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 64L * 1024 * 1024));
+        True(!File.Exists(Path.Combine(directory, "child.txt")), "The active-process limit allowed a helper child process.");
+
+        const string busyLoop = "for /L %i in (0,0,1) do @rem";
+        Throws<TimeoutException>(() => WindowsSandboxedProcess.Run(command, ["/d", "/c", busyLoop], directory,
+            TimeSpan.FromMilliseconds(250), TimeSpan.FromSeconds(5), 64L * 1024 * 1024));
+        using (var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100)))
+            Throws<OperationCanceledException>(() => WindowsSandboxedProcess.Run(command, ["/d", "/c", busyLoop], directory,
+                TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5), 64L * 1024 * 1024, cancellationToken: cancellation.Token));
+        var powershell = Path.Combine(system, "WindowsPowerShell", "v1.0", "powershell.exe");
+        var cpu = Named("CPU-time limit", () => WindowsSandboxedProcess.Run(powershell,
+            ["-NoProfile", "-NonInteractive", "-Command", "while ($true) { [Math]::Sqrt(12345) | Out-Null }"], directory,
+            TimeSpan.FromSeconds(10), TimeSpan.FromMilliseconds(250), 64L * 1024 * 1024));
+        True(cpu.ExitCode != 0, "The Job CPU-time limit did not terminate the busy helper.");
+
+        var memory = Named("memory limit", () => WindowsSandboxedProcess.Run(powershell, ["-NoProfile", "-NonInteractive", "-Command", "$a = New-Object byte[] 134217728; Start-Sleep 1"], directory,
+            TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 32L * 1024 * 1024));
+        True(memory.ExitCode != 0, "The Job memory limit did not terminate the oversized helper.");
+
+        var noisyScript = Path.Combine(directory, "noisy.cmd");
+        File.WriteAllText(noisyScript, "@echo off\r\nfor /L %%i in (1,1,100) do echo 012345678901234567890123456789\r\n");
+        var noisy = Named("diagnostic limit", () => WindowsSandboxedProcess.Run(command, ["/d", "/c", noisyScript], directory, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 64L * 1024 * 1024, diagnosticLimit: 1024));
+        True(noisy.StandardOutput.Length <= 1024, "Sandbox diagnostics exceeded their capture cap.");
+
+        var binary = Named("binary stdout limit", () => WindowsSandboxedProcess.Run(command, ["/d", "/c", $"echo {new string('x', 1024)}"], directory,
+            TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 64L * 1024 * 1024, binaryStandardOutputLimit: 513));
+        True(binary.BinaryStandardOutput.Length == 513, "Binary stdout capture exceeded its strict retained-byte bound.");
+
+        var authorizedOutput = Path.Combine(directory, "authorized.bin");
+        File.WriteAllBytes(authorizedOutput, []);
+        _ = Named("authorized output", () => WindowsSandboxedProcess.Run(command, ["/d", "/c", "echo ok>authorized.bin"], directory,
+            TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 64L * 1024 * 1024, writableOutputPath: authorizedOutput));
+        True(File.ReadAllText(authorizedOutput).Trim() == "ok", "The explicitly authorized sandbox output was not writable.");
+
+        var oversizedOutput = Path.Combine(directory, "oversized.bin");
+        File.WriteAllBytes(oversizedOutput, []);
+        var fsutil = Path.Combine(system, "fsutil.exe");
+        Throws<InvalidDataException>(() => WindowsSandboxedProcess.Run(fsutil,
+            ["file", "seteof", oversizedOutput, "2097152"], directory,
+            TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2), 64L * 1024 * 1024,
+            maximumDirectoryBytes: 1024 * 1024, writableOutputPath: oversizedOutput));
+    }));
+}
 
 var fixtureDirectory = Environment.GetEnvironmentVariable("GROUNDED_FIXTURE_DIR");
 if (!string.IsNullOrWhiteSpace(fixtureDirectory))
@@ -241,8 +418,71 @@ void Run(string name, Action check) { checks++; try { check(); Console.WriteLine
 static void Near(double expected, double actual, double tolerance) { if (Math.Abs(expected - actual) > tolerance) throw new Exception($"expected {expected} ± {tolerance}, got {actual}"); }
 static void Between(double actual, double min, double max) => True(actual >= min && actual <= max, $"expected [{min}, {max}], got {actual}");
 static void True(bool condition, string message) { if (!condition) throw new Exception(message); }
+static T Named<T>(string name, Func<T> action) { try { return action(); } catch (Exception e) { throw new Exception($"{name}: {e.Message}", e); } }
 static void Throws<T>(Action action) where T : Exception { try { action(); } catch (T) { return; } throw new Exception($"Expected {typeof(T).Name}."); }
+static void ThrowsOneOf<TFirst, TSecond>(Action action) where TFirst : Exception where TSecond : Exception
+{
+    try { action(); } catch (TFirst) { return; } catch (TSecond) { return; }
+    throw new Exception($"Expected {typeof(TFirst).Name} or {typeof(TSecond).Name}.");
+}
+static void ThrowsFileAccessDenied(Action action)
+{
+    try { action(); }
+    catch (IOException) { return; }
+    catch (UnauthorizedAccessException) { return; }
+    throw new Exception("Expected the locked file operation to be denied.");
+}
+static void WithTemporaryDirectory(Action<string> action)
+{
+    var path = Path.Combine(Path.GetTempPath(), "GroundedMolar.Tests", Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(path);
+    try { action(path); }
+    finally { Directory.Delete(path, recursive: true); }
+}
 static byte[] BuildContainer(int decodedSize, int compressedSize, byte[] payload) { var bytes = new byte[8 + payload.Length]; BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(0, 4), decodedSize); BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(4, 4), compressedSize); payload.CopyTo(bytes, 8); return bytes; }
+static byte[] BuildPngHeader(int width, int height, bool animated = false, byte bitDepth = 8, byte colorType = 6)
+{
+    using var stream = new MemoryStream();
+    stream.Write(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 });
+    WritePngChunk(stream, "IHDR", data => { data.Write(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness(width))); data.Write(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness(height))); data.Write(new byte[] { bitDepth, colorType, 0, 0, 0 }); });
+    if (animated) WritePngChunk(stream, "acTL", data => data.Write(new byte[8]));
+    WritePngChunk(stream, "IEND", _ => { });
+    return stream.ToArray();
+}
+static void WritePngChunk(Stream stream, string type, Action<MemoryStream> writeData)
+{
+    using var data = new MemoryStream(); writeData(data);
+    stream.Write(BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness(checked((int)data.Length))));
+    stream.Write(System.Text.Encoding.ASCII.GetBytes(type)); data.Position = 0; data.CopyTo(stream); stream.Write(new byte[4]);
+}
+static byte[] BuildJpegHeader(int width, int height) =>
+[
+    0xFF, 0xD8,
+    0xFF, 0xC0, 0x00, 0x08, 0x08,
+    checked((byte)(height >> 8)), checked((byte)(height & 0xFF)), checked((byte)(width >> 8)), checked((byte)(width & 0xFF)), 0,
+    0xFF, 0xD9
+];
+static byte[] BuildWpfScreenshot(bool png)
+{
+    const int size = 512;
+    var pixels = new byte[size * size * 4];
+    for (var index = 0; index < pixels.Length; index += 4)
+    {
+        pixels[index] = 0x20;
+        pixels[index + 1] = 0x40;
+        pixels[index + 2] = 0x80;
+        pixels[index + 3] = 0xFF;
+    }
+    var source = System.Windows.Media.Imaging.BitmapSource.Create(size, size, 96, 96,
+        System.Windows.Media.PixelFormats.Bgra32, null, pixels, size * 4);
+    System.Windows.Media.Imaging.BitmapEncoder encoder = png
+        ? new System.Windows.Media.Imaging.PngBitmapEncoder()
+        : new System.Windows.Media.Imaging.JpegBitmapEncoder { QualityLevel = 90 };
+    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(source));
+    using var output = new MemoryStream();
+    encoder.Save(output);
+    return output.ToArray();
+}
 static byte[] BuildPartyDiscoveryRecord(params string[] rows)
 {
     const string component = "/Script/Maine.PartyComponent";
@@ -299,6 +539,10 @@ sealed class CountingSaveDecoder : ISaveDecoder
 {
     public int Calls { get; private set; }
     public byte[] Decode(string filePath) => [checked((byte)++Calls)];
+}
+sealed class ThrowingSaveDecoder(Exception exception) : ISaveDecoder
+{
+    public byte[] Decode(string filePath) => throw exception;
 }
 sealed class CountingAnalyzer : IMolarAnalyzer
 {

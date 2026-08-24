@@ -29,7 +29,7 @@ dotnet run --project src/GroundedMolar.App
 - `tests/GroundedMolar.Tests` — dependency-free regression runner
 - `docs` — specification, roadmap, evidence log
 
-The project targets .NET 10 because it is installed here. No .NET 10-specific APIs are used, so it can be retargeted to .NET 8 where that targeting pack is installed.
+The project targets .NET 10 and pins SDK 10.0.303 plus Windows Desktop Runtime 10.0.11 as the current minimum secure self-contained release baseline.
 
 ## Public Windows release
 
@@ -46,6 +46,8 @@ For local format research, `--decoded-output` writes the validated decoded bytes
 The bundled `ooz.exe` is integrity-pinned to SHA-256:
 
 `271D3FD02E582175FF033D0A23DCA3785B6888FA21B8CD06741BA8C19B71DF41`
+
+The native decoder is treated as hostile: it runs in a no-capability AppContainer with no network access, read-only access to one private staging directory, an explicit inherited-handle allowlist, and Job Object limits for one process, memory, CPU, and elapsed time. Decoded bytes travel through size-bounded stdout rather than a helper-writable output file, so the helper cannot consume disk beyond the broker-created, quota-checked executable and input snapshots. Any sandbox, helper, quota, crash, or output validation failure returns `Unsupported` and produces no markers.
 
 To run the private fixture integration check locally:
 
@@ -71,6 +73,8 @@ The CLI prints only authoritative uncollected GUIDs and X/Y/Z after reporting `C
 UI changes should follow [the Grounded-derived UI design guidelines](docs/UI_DESIGN_GUIDELINES.md). They document the evidence boundary, semantic palette and typography, settings control patterns, accessibility requirements, and the recommended WPF adaptation.
 
 ## Standalone map preview
+
+`GroundedMolar.Preview` is developer tooling and is explicitly excluded from public release archives. Its caller-selected map/icon inputs are not part of the end-user save-folder trust boundary.
 
 The `--build-map` mode reconstructs the marker-free in-game map from `T_UI_Worldmap_BG.png`, `T_UI_Worldmap_Base.png`, and `T_UI_Worldmap_Water.png`. It applies the required 90° counter-clockwise correction and the palette recovered from the marker-free in-game reference.
 

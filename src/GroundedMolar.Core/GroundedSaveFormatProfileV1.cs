@@ -29,24 +29,26 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
     public IReadOnlyList<MolarSpawn> ReadMolarSpawns(ReadOnlySpan<byte> bytes) =>
         ReadGroup(bytes, NormalAsset, NormalSpawnData, NormalGroup, false).Concat(ReadGroup(bytes, UnderwaterAsset, UnderwaterSpawnData, UnderwaterGroup, true)).ToArray();
 
-    public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes)
+    public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes) => Parse(bytes, CancellationToken.None);
+
+    public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes, CancellationToken cancellationToken)
     {
         var spawns = ReadMolarSpawns(bytes);
         if (spawns.Count == 0 || !spawns.Any(x => !x.IsUnderwater) || !spawns.Any(x => x.IsUnderwater))
             throw new InvalidDataException("Both selected molar groups are required.");
         if (spawns.Select(x => x.SpawnGuid).Distinct().Count() != spawns.Count || spawns.Select(x => x.ActorGuid).Distinct().Count() != spawns.Count)
             throw new InvalidDataException("Selected spawn and actor GUIDs must be unique.");
-        return new(spawns, ReadActors(bytes, spawns));
+        return new(spawns, ReadActors(bytes, spawns, cancellationToken));
     }
 
     public IReadOnlyList<PersistentActorRecord> ReadActors(ReadOnlySpan<byte> bytes)
-        => ReadActors(bytes, ReadMolarSpawns(bytes));
+        => ReadActors(bytes, ReadMolarSpawns(bytes), CancellationToken.None);
 
-    private IReadOnlyList<PersistentActorRecord> ReadActors(ReadOnlySpan<byte> bytes, IReadOnlyList<MolarSpawn> spawns)
+    private IReadOnlyList<PersistentActorRecord> ReadActors(ReadOnlySpan<byte> bytes, IReadOnlyList<MolarSpawn> spawns, CancellationToken cancellationToken)
     {
         var actors = new List<PersistentActorRecord>();
         var selected = spawns.Where(x => x.ActorGuid is not null).Select(x => x.ActorGuid!.Value).ToArray();
-        var occurrences = FindActorOccurrences(bytes, selected);
+        var occurrences = FindActorOccurrences(bytes, selected, cancellationToken);
         actorLookupPassCompleted?.Invoke();
         foreach (var spawn in spawns)
         {
@@ -63,15 +65,14 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
         return actors;
     }
 
-    private static Dictionary<UnrealGuid, List<int>> FindActorOccurrences(ReadOnlySpan<byte> bytes, IReadOnlyList<UnrealGuid> actorGuids)
+    internal static Dictionary<UnrealGuid, List<int>> FindActorOccurrences(ReadOnlySpan<byte> bytes, IReadOnlyList<UnrealGuid> actorGuids, CancellationToken cancellationToken = default)
     {
         var result = actorGuids.ToDictionary(guid => guid, _ => new List<int>());
-        var candidates = actorGuids.Select(guid => (Guid: guid, Bytes: guid.ToSerializedBytes())).GroupBy(x => x.Bytes[0]).ToDictionary(x => x.Key, x => x.ToArray());
         for (var position = 0; position <= bytes.Length - 16; position++)
         {
-            if (!candidates.TryGetValue(bytes[position], out var bucket)) continue;
-            foreach (var candidate in bucket)
-                if (bytes.Slice(position, 16).SequenceEqual(candidate.Bytes)) result[candidate.Guid].Add(position);
+            if ((position & 0xFFF) == 0) cancellationToken.ThrowIfCancellationRequested();
+            var candidate = UnrealGuid.FromSerialized(bytes.Slice(position, 16));
+            if (result.TryGetValue(candidate, out var positions)) positions.Add(position);
         }
         return result;
     }
