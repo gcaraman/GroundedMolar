@@ -17,14 +17,11 @@ dotnet build --no-restore
 dotnet run --project tests/GroundedMolar.Tests
 dotnet run --project src/GroundedMolar.Cli -- C:\path\to\World.csav
 dotnet run --project src/GroundedMolar.Cli -- C:\path\to\World.csav --decoded-output C:\temp\World.bin
-dotnet run --project src/GroundedMolar.Preview -- --build-map C:\path\to\MapIcons marker-free-map.png
-dotnet run --project src/GroundedMolar.Preview -- C:\path\to\World.csav C:\path\to\marker-free-map.png preview.png --icon C:\path\to\T_UI_MM_MorselGeneric.png
 dotnet run --project src/GroundedMolar.App
 ```
 
 - `src/GroundedMolar.Core` — core contracts, analysis, projection
 - `src/GroundedMolar.Cli` — Phase 1 entry point
-- `src/GroundedMolar.Preview` — standalone 4096×4096 PNG preview renderer
 - `src/GroundedMolar.App` — WPF save picker, folder monitor, and map-image viewer
 - `tests/GroundedMolar.Tests` — dependency-free regression runner
 - `docs` — specification, roadmap, evidence log
@@ -72,16 +69,8 @@ The CLI prints only authoritative uncollected GUIDs and X/Y/Z after reporting `C
 
 UI changes should follow [the Grounded-derived UI design guidelines](docs/UI_DESIGN_GUIDELINES.md). They document the evidence boundary, semantic palette and typography, settings control patterns, accessibility requirements, and the recommended WPF adaptation.
 
-## Standalone map preview
-
-`GroundedMolar.Preview` is developer tooling and is explicitly excluded from public release archives. Its caller-selected map/icon inputs are not part of the end-user save-folder trust boundary.
-
-The `--build-map` mode reconstructs the marker-free in-game map from `T_UI_Worldmap_BG.png`, `T_UI_Worldmap_Base.png`, and `T_UI_Worldmap_Water.png`. It applies the required 90° counter-clockwise correction and the palette recovered from the marker-free in-game reference.
-
-The normal preview mode renders a composed 4096×4096 map with every authoritative uncollected record from a `Validated` analysis. Unapproached markers are drawn at 45% opacity and approached markers at full opacity. The renderer uses the accepted screenshot calibration scaled through normalized coordinates. The diagnostic comparison SVG in `preview/` shows that calibration in cyan and the tentative exported-bounds transform in magenta; the tentative transform remains isolated until an in-game ground-truth check resolves the discrepancy.
-
 ## Desktop save-map viewer
 
-The WPF app provides a direct `World.csav` picker, an optional recursive saves-folder monitor, a friendly current-save card using the save's own `SaveGameScreenshot`, a native 4096×4096 map-image preview, and a manual refresh button. When monitoring is checked, it chooses the most recently written `World.csav` in the selected folder and automatically refreshes after debounced file changes. The selected save, folder, monitoring choice, and unapproached-marker opacity are restored on the next launch. Marker centers are projected directly from each selected spawn's serialized X/Y transform. Only `Validated` + `Uncollected` records are rendered using the white 64×64 in-game Milk Molar icon.
+The WPF app provides a direct `World.csav` picker, an optional recursive saves-folder monitor, a native logical 512 × 512 map-image preview, a friendly current-save card using the save's own `SaveGameScreenshot`, and a manual refresh button. When monitoring is checked, it chooses the most recently written `World.csav` in the selected folder and automatically refreshes after debounced file changes. The selected save, folder, monitoring choice, and unapproached-marker opacity are restored on the next launch. Marker centers are projected directly from each selected spawn's serialized X/Y transform. Only `Validated` + `Uncollected` records are rendered using the white 64×64 in-game Milk Molar icon.
 
-Select a `World.csav` directly or choose a saves folder, then use **Refresh** whenever an immediate reload is wanted. All uncollected selected spawns are displayed; unapproached molars are slightly transparent. A changed or unrecognized save profile clears the preview rather than guessing.
+Select a `World.csav` directly or choose a saves folder, then use **Refresh** whenever an immediate reload is wanted. All uncollected selected spawns are displayed; unapproached molars are slightly transparent. Enable **Show community guide hints** in Preferences to reveal the bundled community location hint in every marker popup. The same preference card links to the source guide and requires confirmation of the full external URL before opening a browser. The editable guide catalog is [`src/GroundedMolar.App/Data/milk-molar-guide.json`](src/GroundedMolar.App/Data/milk-molar-guide.json); rebuild or republish after editing it. Hints are approximate presentation data and never affect save validation or marker state. A changed or unrecognized save profile clears the preview rather than guessing.

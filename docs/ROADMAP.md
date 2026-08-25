@@ -17,7 +17,7 @@ Completed foundation: `.csav` framing, Kraken backend invocation, output-length 
 - Add normalized projection to CLI/debug output.
 - Validate the native map-widget transform with independent in-game anchors.
 
-Completed preparation: accepted projection scaled to the exported 4096 × 4096 map, explicit comparison with the tentative game-bounds transform, and a fail-closed standalone 4096 × 4096 PNG preview renderer.
+Completed preparation: accepted projection scaled to the exported map and explicit comparison with the tentative game-bounds transform.
 
 Completed map reconstruction: marker-free game map rebuilt from three exported UI layers, orientation corrected, and compared pixel-for-pixel with the supplied in-game reference.
 
@@ -26,7 +26,7 @@ Current validation gate: compare either projection against one visible in-game m
 ## Completed — desktop save-map viewer
 
 - Direct save picking and recursive latest-save folder monitoring implemented.
-- Native 4096 × 4096 fail-closed image preview and manual refresh implemented.
+- Native logical 512 × 512 fail-closed desktop image preview and manual refresh implemented.
 - Logical-pixel-preserving fit-to-window through 16× zoom and mouse-drag panning implemented with fixed-size, center-anchored molar markers.
 - Persisted save/folder selection, debouncing, and transient-read retries implemented.
 

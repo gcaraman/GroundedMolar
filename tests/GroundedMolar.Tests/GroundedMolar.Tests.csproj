@@ -2,6 +2,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\GroundedMolar.Core\GroundedMolar.Core.csproj" />
+    <Compile Include="..\..\src\GroundedMolar.App\AppSettingsStore.cs" Link="App\AppSettingsStore.cs" />
+    <Compile Include="..\..\src\GroundedMolar.App\SaveDiscovery.cs" Link="App\SaveDiscovery.cs" />
+    <Compile Include="..\..\src\GroundedMolar.App\SaveMapImageRenderer.cs" Link="App\SaveMapImageRenderer.cs" />
+    <Content Include="..\..\src\GroundedMolar.App\Data\milk-molar-guide.json"
+             Link="Data\milk-molar-guide.json"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\src\GroundedMolar.App\Assets\grounded-marker-free-map.png"
+             Link="Assets\grounded-marker-free-map.png"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,10 +1,67 @@
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using GroundedMolar.App;
 using GroundedMolar.Core;
 
 var failures = new List<string>();
 var checks = 0;
+Run("latest-save discovery preserves timestamp and path ordering", () =>
+{
+    var root = Path.Combine(Path.GetTempPath(), $"GroundedMolar-discovery-{Guid.NewGuid():N}");
+    try
+    {
+        var alpha = Path.Combine(root, "alpha", "World.csav");
+        var zulu = Path.Combine(root, "zulu", "World.csav");
+        Directory.CreateDirectory(Path.GetDirectoryName(alpha)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(zulu)!);
+        File.WriteAllBytes(alpha, [1]);
+        File.WriteAllBytes(zulu, [2]);
+        var tie = new DateTime(2026, 8, 25, 10, 0, 0, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(alpha, tie);
+        File.SetLastWriteTimeUtc(zulu, tie);
+        True(SaveDiscovery.FindCurrentSave(root, CancellationToken.None) == Path.GetFullPath(alpha),
+            "Equal timestamps must retain the prior case-insensitive path tie-break.");
+        File.SetLastWriteTimeUtc(zulu, tie.AddMinutes(1));
+        True(SaveDiscovery.FindCurrentSave(root, CancellationToken.None) == Path.GetFullPath(zulu),
+            "The newest recursive World.csav was not selected.");
+    }
+    finally
+    {
+        if (Directory.Exists(root)) Directory.Delete(root, true);
+    }
+});
+Run("latest-save discovery honors cancellation", () =>
+{
+    var root = Path.Combine(Path.GetTempPath(), $"GroundedMolar-discovery-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(root);
+    try
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        Throws<OperationCanceledException>(() => SaveDiscovery.FindCurrentSave(root, cancellation.Token));
+    }
+    finally { Directory.Delete(root, true); }
+});
+Run("first map load produces a frozen logical bitmap", () =>
+{
+    var analysis = new MolarAnalysis([], [], [], [], SaveConfidence.Validated, null);
+    var map = SaveMapImageRenderer.LoadMapAsync(analysis, CancellationToken.None).GetAwaiter().GetResult();
+    True(map.PixelWidth == 512 && map.PixelHeight == 512, "The worker-loaded map dimensions changed.");
+    True(map.IsFrozen, "The worker-loaded map must be safe to hand to the WPF dispatcher.");
+});
+Run("settings equality detects only actual persisted changes", () =>
+{
+    var saved = new AppSettings("save", "folder", true, .45, false);
+    True(!AppSettingsStore.HasChanged(saved, new AppSettings("save", "folder", true, .45, false)),
+        "Unchanged settings should not be rewritten.");
+    True(AppSettingsStore.HasChanged(saved, saved with { SavePath = "new-save" }),
+        "A selected-save change must be persisted.");
+    True(AppSettingsStore.HasChanged(saved, saved with { ShowGuideHints = true }),
+        "A preference change must be persisted.");
+});
 Run("map zoom is bounded by fit and 16x", () =>
 {
     var fit = MapZoom.FitScale(800, 600, 4096, 4096);
@@ -49,33 +106,37 @@ Run("remaining molar projection", () => { var p = new CoordinateProjector().Worl
 Run("known calibration projection", () => { var p = new CoordinateProjector().WorldToReferenceMap(65976.484, -53238.310); Between(p.X, 294, 299); Between(p.Y, 206, 212); });
 Run("accepted projection scales to exported texture", () => { var p = new CoordinateProjector().WorldToExportedTexture(-25383.043, -7996.126); Near(1886.34, p.X, .05); Near(2536.94, p.Y, .05); });
 Run("tentative game bounds remain isolated", () => { var p = new CoordinateProjector().WorldToTentativeGameBoundsTexture(-25383.043, -7996.126); Near(1884.24, p.X, .05); Near(2567.84, p.Y, .05); });
-Run("collected markers use the proof-of-concept pink", () =>
+Run("offline community hint catalog is complete and category-aware", () =>
 {
-    True(MolarMarkerPalette.Collected == (255, 78, 168), $"Unexpected collected marker color {MolarMarkerPalette.Collected}.");
-    True(MolarMarkerPalette.Collected != MolarMarkerPalette.Uncollected, "Collected and uncollected marker colors must be distinct.");
+    True(MolarHintCatalog.Count == 219, $"Expected 219 guide hints, found {MolarHintCatalog.Count}.");
+    True(MolarHintCatalog.All.Select(entry => entry.Id).Distinct().Count() == 219, "Guide entry IDs must remain unique.");
+    True(MolarHintCatalog.All.Count(entry => entry.CategoryId == 1) == 126, "Above-ground guide count changed.");
+    True(MolarHintCatalog.All.Count(entry => entry.CategoryId == 2) == 21, "Underwater guide count changed.");
+    True(MolarHintCatalog.All.Count(entry => entry.CategoryId == 3) == 72, "Underground guide count changed.");
+    var normal = SpawnAtGuidePoint(314.020542, 204.818891, underwater: false);
+    var underwater = SpawnAtGuidePoint(921.792973, 744.698686, underwater: true);
+    True(MolarHintCatalog.FindClosest(normal)?.Number == 121, "Normal guide hint lookup changed.");
+    True(MolarHintCatalog.FindClosest(underwater)?.Number == 182, "Underwater guide hint lookup crossed categories.");
+    var sandbox = SpawnAtOrientedMapPoint(329.948879, 845.231009, underwater: false);
+    True(MolarHintCatalog.FindClosest(sandbox)?.Number == 113,
+        "The sandbox hint no longer follows the guide map's required 90-degree orientation correction.");
+    foreach (var entry in MolarHintCatalog.All)
+    {
+        var spawn = SpawnAtGuidePoint(entry.GuideX, entry.GuideY, entry.CategoryId == 2);
+        True(MolarHintCatalog.FindClosest(spawn)?.Id == entry.Id,
+            $"Guide entry {entry.Id} does not round-trip through the oriented map lookup.");
+    }
 });
-Run("marker-free map palette reproduces reference colors", () =>
+Run("repeated guide prose remains attached to distinct source pins", () =>
 {
-    var background = GroundedMapPalette.Compose(1, 0, 0);
-    True(background == (93, 73, 75), $"Unexpected background-mask color {background}.");
-    var land = GroundedMapPalette.Compose(0, 1, 0);
-    True(land == (72, 31, 25), $"Unexpected base-map color {land}.");
-    var water = GroundedMapPalette.Compose(0, 0, 1);
-    True(water == (31, 29, 49), $"Unexpected water color {water}.");
-});
-Run("exported UI bounds projection", () =>
-{
-    var projector = new ExportedUiBoundsProjector();
-    var center = projector.WorldToTexture(0, 0);
-    Near(2048, center.X, .0001); Near(2048, center.Y, .0001);
-    var corners = projector.WorldToTexture(100000, -100000);
-    Near(0, corners.X, .0001); Near(0, corners.Y, .0001);
-});
-Run("preview rejects non-validated analysis", () =>
-{
-    var renderer = new MapPreviewRenderer();
-    var unsupported = MolarAnalysis.Unsupported("test");
-    Throws<InvalidOperationException>(() => renderer.RenderSvg(unsupported, [1, 2, 3]));
+    var repeated = MolarHintCatalog.All
+        .GroupBy(entry => entry.Description, StringComparer.Ordinal)
+        .Where(group => group.Count() > 1)
+        .ToArray();
+    True(repeated.Length == 4, $"Expected 4 repeated-description groups, found {repeated.Length}.");
+    True(repeated.Any(group => group.Key == "Inside the can"), "Known repeated source description disappeared.");
+    True(repeated.All(group => group.Select(entry => (entry.GuideX, entry.GuideY)).Distinct().Count() == group.Count()),
+        "Repeated descriptions must represent distinct guide coordinates.");
 });
 Run("screenshot headers enforce magic dimensions frame count and bounds", () =>
 {
@@ -528,6 +589,21 @@ static void WriteActorState(Stream stream, UnrealGuid actorGuid, byte state)
 static void WithCsav(byte[] decoded, byte[] payload, Action<string> action) => WithRawFile(BuildContainer(decoded.Length, payload.Length, payload), action);
 static void WithRawFile(byte[] bytes, Action<string> action) { var path = Path.Combine(Path.GetTempPath(), $"GroundedMolar-test-{Guid.NewGuid():N}.csav"); try { File.WriteAllBytes(path, bytes); action(path); } finally { File.Delete(path); } }
 static string FindAncestorFile(string name) { for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent) { var path = Path.Combine(directory.FullName, name); if (File.Exists(path)) return path; } throw new FileNotFoundException($"Could not locate {name}."); }
+static MolarSpawn SpawnAtGuidePoint(double guideX, double guideY, bool underwater)
+{
+    const double guideSize = 1254;
+    var orientedMapX = guideY;
+    var orientedMapY = guideSize - guideX;
+    return SpawnAtOrientedMapPoint(orientedMapX, orientedMapY, underwater);
+}
+static MolarSpawn SpawnAtOrientedMapPoint(double mapX, double mapY, bool underwater)
+{
+    const double guideSize = 1254;
+    var worldY = mapX * 200000 / guideSize - 100000;
+    var worldX = 100000 - mapY * 200000 / guideSize;
+    return new(new UnrealGuid(1, 2, 3, 4), new UnrealGuid(5, 6, 7, 8), worldX, worldY, 0,
+        "test", "test", 0, underwater, MolarState.Uncollected, MolarApproachState.Unapproached);
+}
 
 sealed class FakeKrakenDecoder(byte[] result) : IKrakenDecoder
 {
