@@ -27,7 +27,7 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
     }
 
     public IReadOnlyList<MolarSpawn> ReadMolarSpawns(ReadOnlySpan<byte> bytes) =>
-        ReadGroup(bytes, NormalAsset, NormalSpawnData, NormalGroup, false).Concat(ReadGroup(bytes, UnderwaterAsset, UnderwaterSpawnData, UnderwaterGroup, true)).ToArray();
+        ReadGroup(bytes, NormalAsset, NormalGroup).Concat(ReadGroup(bytes, UnderwaterAsset, UnderwaterGroup)).ToArray();
 
     public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes) => Parse(bytes, CancellationToken.None);
 
@@ -77,7 +77,7 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
         return result;
     }
 
-    private static IReadOnlyList<MolarSpawn> ReadGroup(ReadOnlySpan<byte> bytes, string groupAsset, string expectedSpawnData, string groupName, bool underwater)
+    private static IReadOnlyList<MolarSpawn> ReadGroup(ReadOnlySpan<byte> bytes, string groupAsset, string groupName)
     {
         var marker = Encoding.ASCII.GetBytes(groupAsset + "\0");
         var markerPositions = FindAll(bytes, marker).ToArray();
@@ -92,7 +92,11 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
         for (var index = 0; index < count; index++)
         {
             var spawnData = ReadAsciiFString(bytes, ref cursor);
-            if (!spawnData.Equals(expectedSpawnData, StringComparison.Ordinal)) throw new InvalidDataException($"Unexpected spawn data in {groupName}[{index}].");
+            // Underwater entries may appear in either group; classify per-entry rather than per-group.
+            bool isUnderwaterEntry;
+            if (spawnData.Equals(NormalSpawnData, StringComparison.Ordinal)) isUnderwaterEntry = false;
+            else if (spawnData.Equals(UnderwaterSpawnData, StringComparison.Ordinal)) isUnderwaterEntry = true;
+            else throw new InvalidDataException($"Unexpected spawn data in {groupName}[{index}].");
             var recordLength = index == count - 1 ? 85 : RecordBytesAfterSpawnData;
             EnsureAvailable(bytes, cursor, recordLength);
             var record = bytes.Slice(cursor, recordLength);
@@ -100,7 +104,7 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
             var x = ReadSingle(record, 16); var y = ReadSingle(record, 20); var z = ReadSingle(record, 24);
             var spawnGuid = UnrealGuid.FromSerialized(record[40..56]);
             var actorGuid = UnrealGuid.FromSerialized(record[64..80]);
-            result.Add(new(spawnGuid, actorGuid, x, y, z, groupName, spawnData, index, underwater, MolarState.Unknown, MolarApproachState.Unknown));
+            result.Add(new(spawnGuid, actorGuid, x, y, z, groupName, spawnData, index, isUnderwaterEntry, MolarState.Unknown, MolarApproachState.Unknown));
             cursor += recordLength;
         }
         return result;

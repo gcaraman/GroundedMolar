@@ -100,6 +100,14 @@ Normal map rendering includes every authoritative uncollected selection. Unappro
 
 The standalone preview has an explicit `--show-collected true` diagnostic layer. It preserves normal rendering defaults and draws only authoritatively resolved `Collected` records in pink (`#FF4EA8`) at their selected-spawn transforms. The `--collected-poc` diagnostic reproduces the single validated before/after transition above when private fixtures are unavailable; it does not introduce or infer any additional spawn.
 
+## Accepted mixed spawn data within molar groups
+
+Validated against a live autosave (`World.csav`, decoded 4,807,957 bytes) on 2026-08-24:
+
+The `SG_NG+_MilkMolars` group contained 40 entries, of which one (index 8) carried `SD_MilkMolar_Underwater_NG+` spawn data instead of `SD_MilkMolar_NG+`. The `SG_NG+_MilkMolarsUnderwater` group contained 6 entries, all `SD_MilkMolar_Underwater_NG+`. The individual binary record layout (40-byte `FTransform`, 16-byte spawn `FGuid`, fixed structural fields, 16-byte actor `FGuid`) was byte-for-byte identical to the previously validated format.
+
+`isUnderwater` is therefore derived from each entry's spawn-data asset path, not from the group it belongs to. Both `SD_MilkMolar_NG+` and `SD_MilkMolar_Underwater_NG+` are accepted in either group; any other spawn-data value still fails closed as `Unsupported`. The `SG_NG+_MilkMolars` and `SG_NG+_MilkMolarsUnderwater` group-asset markers still uniquely identify the two groups; their individual counts are still authoritative.
+
 ## Accepted bounded refresh implementation
 
 The v1 analyzer now validates and returns selected spawns and persistent actor records as one atomic profile operation. Persistent actor GUID occurrences are located in one complete decoded-save pass with a full-width GUID dictionary lookup at each byte offset, rather than comparing every same-prefix selected actor. This is linear in save length and cannot degrade to `save bytes × same-prefix actors`. The scan checks cancellation every 4096 offsets. The same reference-count and persistent-signature rules remain fail-closed. Deterministic synthetic regressions cover recognized state `1`, an absent persistent record, an unrecognized second record, more than two GUID occurrences, exactly one actor lookup pass per analysis, 1024 same-prefix GUIDs over 8 MiB, and cancellation.
