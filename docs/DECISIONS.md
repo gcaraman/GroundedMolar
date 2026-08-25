@@ -108,6 +108,10 @@ The `SG_NG+_MilkMolars` group contained 40 entries, of which one (index 8) carri
 
 `isUnderwater` is therefore derived from each entry's spawn-data asset path, not from the group it belongs to. Both `SD_MilkMolar_NG+` and `SD_MilkMolar_Underwater_NG+` are accepted in either group; any other spawn-data value still fails closed as `Unsupported`. The `SG_NG+_MilkMolars` and `SG_NG+_MilkMolarsUnderwater` group-asset markers still uniquely identify the two groups; their individual counts are still authoritative.
 
+## Accepted empty underwater group
+
+Validated against a live autosave on 2026-08-25 where the `SG_NG+_MilkMolarsUnderwater` group carried `count=0`. In that case the serialization ends immediately after the 4-byte count field: no reserved field and no entries follow. Reading the 4 bytes that would otherwise be the reserved field instead reads unrelated adjacent data. The count=0 path therefore returns an empty list without consuming any further bytes. The normal group is still required to have at least one entry; an absent or empty normal group still fails closed.
+
 ## Accepted bounded refresh implementation
 
 The v1 analyzer now validates and returns selected spawns and persistent actor records as one atomic profile operation. Persistent actor GUID occurrences are located in one complete decoded-save pass with a full-width GUID dictionary lookup at each byte offset, rather than comparing every same-prefix selected actor. This is linear in save length and cannot degrade to `save bytes × same-prefix actors`. The scan checks cancellation every 4096 offsets. The same reference-count and persistent-signature rules remain fail-closed. Deterministic synthetic regressions cover recognized state `1`, an absent persistent record, an unrecognized second record, more than two GUID occurrences, exactly one actor lookup pass per analysis, 1024 same-prefix GUIDs over 8 MiB, and cancellation.

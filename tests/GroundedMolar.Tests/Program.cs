@@ -167,6 +167,20 @@ Run("v1 profile accepts underwater entry within the normal group", () =>
     True(analysis.Selected.Count(x => !x.IsUnderwater) == 1, "Normal entry count wrong in mixed-group save.");
     True(analysis.Selected.Count(x => x.IsUnderwater) == 2, "Underwater entry count wrong in mixed-group save.");
 });
+Run("v1 profile accepts empty underwater group", () =>
+{
+    var bytes = BuildSyntheticEmptyUnderwaterSave();
+    var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
+    True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Save with empty underwater group was not validated.");
+    True(analysis.Selected.Count == 1 && !analysis.Selected[0].IsUnderwater, "Empty underwater group produced wrong spawn classification.");
+});
+Run("v1 profile accepts both groups empty", () =>
+{
+    var bytes = BuildSyntheticBothGroupsEmptySave();
+    var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
+    True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Save with both groups empty was not validated.");
+    True(analysis.Selected.Count == 0, "Both-empty save produced spawns.");
+});
 Run("stable analysis service reuses injected services without retaining save bytes", () =>
 {
     var decoder = new CountingSaveDecoder();
@@ -508,8 +522,27 @@ static byte[] BuildPartyDiscoveryRecord(params string[] rows)
     return record.ToArray();
 }
 static void WriteFString(Stream stream, string value) { var bytes = System.Text.Encoding.ASCII.GetBytes(value); stream.Write(BitConverter.GetBytes(bytes.Length + 1)); stream.Write(bytes); stream.WriteByte(0); }
-static byte[] BuildSyntheticMixedMolarSave()
+static byte[] BuildSyntheticEmptyUnderwaterSave()
 {
+    // Underwater group with count=0: only the count field is written, no reserved field or entries.
+    using var stream = new MemoryStream();
+    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_NG+.SD_MilkMolar_NG+_C", new UnrealGuid(1, 2, 3, 4), new UnrealGuid(5, 6, 7, 8));
+    var underwaterMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C\0");
+    stream.Write(underwaterMarker);
+    stream.Write(BitConverter.GetBytes(0));  // count=0, no reserved field, no entries
+    return stream.ToArray();
+}
+static byte[] BuildSyntheticBothGroupsEmptySave()
+{
+    // Both groups with count=0: pre-NG+ selection state.
+    using var stream = new MemoryStream();
+    var normalMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C\0");
+    stream.Write(normalMarker); stream.Write(BitConverter.GetBytes(0));
+    var underwaterMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C\0");
+    stream.Write(underwaterMarker); stream.Write(BitConverter.GetBytes(0));
+    return stream.ToArray();
+}
+static byte[] BuildSyntheticMixedMolarSave(){
     // Normal group with 2 entries: first is normal, second is underwater (mixed).
     // Underwater group with 1 entry. All actors absent (all collected).
     var spawnNormal = new UnrealGuid(1, 2, 3, 4);
