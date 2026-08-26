@@ -27,15 +27,13 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
     }
 
     public IReadOnlyList<MolarSpawn> ReadMolarSpawns(ReadOnlySpan<byte> bytes) =>
-        ReadGroup(bytes, NormalAsset, NormalSpawnData, NormalGroup, false).Concat(ReadGroup(bytes, UnderwaterAsset, UnderwaterSpawnData, UnderwaterGroup, true)).ToArray();
+        ReadGroup(bytes, NormalAsset, NormalGroup).Concat(ReadGroup(bytes, UnderwaterAsset, UnderwaterGroup)).ToArray();
 
     public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes) => Parse(bytes, CancellationToken.None);
 
     public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes, CancellationToken cancellationToken)
     {
         var spawns = ReadMolarSpawns(bytes);
-        if (spawns.Count == 0 || !spawns.Any(x => !x.IsUnderwater) || !spawns.Any(x => x.IsUnderwater))
-            throw new InvalidDataException("Both selected molar groups are required.");
         if (spawns.Select(x => x.SpawnGuid).Distinct().Count() != spawns.Count || spawns.Select(x => x.ActorGuid).Distinct().Count() != spawns.Count)
             throw new InvalidDataException("Selected spawn and actor GUIDs must be unique.");
         return new(spawns, ReadActors(bytes, spawns, cancellationToken));
@@ -77,22 +75,30 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
         return result;
     }
 
-    private static IReadOnlyList<MolarSpawn> ReadGroup(ReadOnlySpan<byte> bytes, string groupAsset, string expectedSpawnData, string groupName, bool underwater)
+    private static IReadOnlyList<MolarSpawn> ReadGroup(ReadOnlySpan<byte> bytes, string groupAsset, string groupName)
     {
         var marker = Encoding.ASCII.GetBytes(groupAsset + "\0");
         var markerPositions = FindAll(bytes, marker).ToArray();
         if (markerPositions.Length != 1) throw new InvalidDataException($"Expected one {groupName} group record, found {markerPositions.Length}.");
         var cursor = markerPositions[0] + marker.Length;
-        EnsureAvailable(bytes, cursor, 8);
+        EnsureAvailable(bytes, cursor, 4);
         var count = BinaryPrimitives.ReadInt32LittleEndian(bytes[cursor..]); cursor += 4;
+        if (count is < 0 or > 512) throw new InvalidDataException($"Invalid {groupName} entry count.");
+        // When count=0 the group has no entries and no reserved field follows.
+        if (count == 0) return [];
+        EnsureAvailable(bytes, cursor, 4);
         var reserved = BinaryPrimitives.ReadInt32LittleEndian(bytes[cursor..]); cursor += 4;
-        if (count is < 1 or > 512 || reserved != 0) throw new InvalidDataException($"Invalid {groupName} entry header.");
+        if (reserved != 0) throw new InvalidDataException($"Invalid {groupName} entry header.");
 
         var result = new List<MolarSpawn>(count);
         for (var index = 0; index < count; index++)
         {
             var spawnData = ReadAsciiFString(bytes, ref cursor);
-            if (!spawnData.Equals(expectedSpawnData, StringComparison.Ordinal)) throw new InvalidDataException($"Unexpected spawn data in {groupName}[{index}].");
+            // Underwater entries may appear in either group; classify per-entry rather than per-group.
+            bool isUnderwaterEntry;
+            if (spawnData.Equals(NormalSpawnData, StringComparison.Ordinal)) isUnderwaterEntry = false;
+            else if (spawnData.Equals(UnderwaterSpawnData, StringComparison.Ordinal)) isUnderwaterEntry = true;
+            else throw new InvalidDataException($"Unexpected spawn data in {groupName}[{index}].");
             var recordLength = index == count - 1 ? 85 : RecordBytesAfterSpawnData;
             EnsureAvailable(bytes, cursor, recordLength);
             var record = bytes.Slice(cursor, recordLength);
@@ -100,7 +106,7 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
             var x = ReadSingle(record, 16); var y = ReadSingle(record, 20); var z = ReadSingle(record, 24);
             var spawnGuid = UnrealGuid.FromSerialized(record[40..56]);
             var actorGuid = UnrealGuid.FromSerialized(record[64..80]);
-            result.Add(new(spawnGuid, actorGuid, x, y, z, groupName, spawnData, index, underwater, MolarState.Unknown, MolarApproachState.Unknown));
+            result.Add(new(spawnGuid, actorGuid, x, y, z, groupName, spawnData, index, isUnderwaterEntry, MolarState.Unknown, MolarApproachState.Unknown));
             cursor += recordLength;
         }
         return result;

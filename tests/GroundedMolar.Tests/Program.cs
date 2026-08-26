@@ -219,6 +219,29 @@ Run("actor lookup remains linear for same-prefix GUIDs and honors cancellation",
     cancelled.Cancel();
     Throws<OperationCanceledException>(() => GroundedSaveFormatProfileV1.FindActorOccurrences(bytes, actors, cancelled.Token));
 });
+Run("v1 profile accepts underwater entry within the normal group", () =>
+{
+    var bytes = BuildSyntheticMixedMolarSave();
+    var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
+    True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Mixed-group save was not validated.");
+    True(analysis.Selected.Count == 3, $"Expected 3 selected spawns, got {analysis.Selected.Count}.");
+    True(analysis.Selected.Count(x => !x.IsUnderwater) == 1, "Normal entry count wrong in mixed-group save.");
+    True(analysis.Selected.Count(x => x.IsUnderwater) == 2, "Underwater entry count wrong in mixed-group save.");
+});
+Run("v1 profile accepts empty underwater group", () =>
+{
+    var bytes = BuildSyntheticEmptyUnderwaterSave();
+    var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
+    True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Save with empty underwater group was not validated.");
+    True(analysis.Selected.Count == 1 && !analysis.Selected[0].IsUnderwater, "Empty underwater group produced wrong spawn classification.");
+});
+Run("v1 profile accepts both groups empty", () =>
+{
+    var bytes = BuildSyntheticBothGroupsEmptySave();
+    var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
+    True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Save with both groups empty was not validated.");
+    True(analysis.Selected.Count == 0, "Both-empty save produced spawns.");
+});
 Run("stable analysis service reuses injected services without retaining save bytes", () =>
 {
     var decoder = new CountingSaveDecoder();
@@ -560,6 +583,55 @@ static byte[] BuildPartyDiscoveryRecord(params string[] rows)
     return record.ToArray();
 }
 static void WriteFString(Stream stream, string value) { var bytes = System.Text.Encoding.ASCII.GetBytes(value); stream.Write(BitConverter.GetBytes(bytes.Length + 1)); stream.Write(bytes); stream.WriteByte(0); }
+static byte[] BuildSyntheticEmptyUnderwaterSave()
+{
+    // Underwater group with count=0: only the count field is written, no reserved field or entries.
+    using var stream = new MemoryStream();
+    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_NG+.SD_MilkMolar_NG+_C", new UnrealGuid(1, 2, 3, 4), new UnrealGuid(5, 6, 7, 8));
+    var underwaterMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C\0");
+    stream.Write(underwaterMarker);
+    stream.Write(BitConverter.GetBytes(0));  // count=0, no reserved field, no entries
+    return stream.ToArray();
+}
+static byte[] BuildSyntheticBothGroupsEmptySave()
+{
+    // Both groups with count=0: pre-NG+ selection state.
+    using var stream = new MemoryStream();
+    var normalMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C\0");
+    stream.Write(normalMarker); stream.Write(BitConverter.GetBytes(0));
+    var underwaterMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C\0");
+    stream.Write(underwaterMarker); stream.Write(BitConverter.GetBytes(0));
+    return stream.ToArray();
+}
+static byte[] BuildSyntheticMixedMolarSave(){
+    // Normal group with 2 entries: first is normal, second is underwater (mixed).
+    // Underwater group with 1 entry. All actors absent (all collected).
+    var spawnNormal = new UnrealGuid(1, 2, 3, 4);
+    var actorNormal = new UnrealGuid(5, 6, 7, 8);
+    var spawnMixed = new UnrealGuid(21, 22, 23, 24);
+    var actorMixed = new UnrealGuid(25, 26, 27, 28);
+    var spawnUnderwater = new UnrealGuid(9, 10, 11, 12);
+    var actorUnderwater = new UnrealGuid(13, 14, 15, 16);
+    using var stream = new MemoryStream();
+    // Normal group: count=2, first entry (89 bytes), second entry (85 bytes last)
+    var normalGroupMarker = System.Text.Encoding.ASCII.GetBytes("/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C\0");
+    stream.Write(normalGroupMarker); stream.Write(BitConverter.GetBytes(2)); stream.Write(new byte[4]);
+    WriteFString(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_NG+.SD_MilkMolar_NG+_C");
+    stream.Write(MakeRecord(spawnNormal, actorNormal, isLast: false));
+    WriteFString(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_Underwater_NG+.SD_MilkMolar_Underwater_NG+_C");
+    stream.Write(MakeRecord(spawnMixed, actorMixed, isLast: true));
+    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_Underwater_NG+.SD_MilkMolar_Underwater_NG+_C", spawnUnderwater, actorUnderwater);
+    return stream.ToArray();
+}
+static byte[] MakeRecord(UnrealGuid spawnGuid, UnrealGuid actorGuid, bool isLast)
+{
+    var record = new byte[isLast ? 85 : 89];
+    BitConverter.GetBytes(1f).CopyTo(record, 12); BitConverter.GetBytes(10f).CopyTo(record, 16); BitConverter.GetBytes(20f).CopyTo(record, 20); BitConverter.GetBytes(30f).CopyTo(record, 24);
+    BitConverter.GetBytes(1f).CopyTo(record, 28); BitConverter.GetBytes(1f).CopyTo(record, 32); BitConverter.GetBytes(1f).CopyTo(record, 36);
+    spawnGuid.ToSerializedBytes().CopyTo(record, 40); BitConverter.GetBytes(1).CopyTo(record, 56); record[60] = 1;
+    actorGuid.ToSerializedBytes().CopyTo(record, 64); BitConverter.GetBytes(1).CopyTo(record, 80);
+    return record;
+}
 static byte[] BuildSyntheticMolarSave(bool includeNormalState, byte normalState, bool includeUnderwaterState)
 {
     var normalActor = new UnrealGuid(5, 6, 7, 8);

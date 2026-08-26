@@ -96,6 +96,20 @@ Independent logout regression: selected 66, collected 0, uncollected 66 (65 unap
 
 Normal map rendering includes every authoritative uncollected selection. Unapproached markers default to 45% opacity and can be adjusted from 0–100% with the persisted desktop slider; approached markers remain at full opacity.
 
+The standalone preview has an explicit `--show-collected true` diagnostic layer. It preserves normal rendering defaults and draws only authoritatively resolved `Collected` records in pink (`#FF4EA8`) at their selected-spawn transforms. The `--collected-poc` diagnostic reproduces the single validated before/after transition above when private fixtures are unavailable; it does not introduce or infer any additional spawn.
+
+## Accepted mixed spawn data within molar groups
+
+Validated against a live autosave (`World.csav`, decoded 4,807,957 bytes) on 2026-08-24:
+
+The `SG_NG+_MilkMolars` group contained 40 entries, of which one (index 8) carried `SD_MilkMolar_Underwater_NG+` spawn data instead of `SD_MilkMolar_NG+`. The `SG_NG+_MilkMolarsUnderwater` group contained 6 entries, all `SD_MilkMolar_Underwater_NG+`. The individual binary record layout (40-byte `FTransform`, 16-byte spawn `FGuid`, fixed structural fields, 16-byte actor `FGuid`) was byte-for-byte identical to the previously validated format.
+
+`isUnderwater` is therefore derived from each entry's spawn-data asset path, not from the group it belongs to. Both `SD_MilkMolar_NG+` and `SD_MilkMolar_Underwater_NG+` are accepted in either group; any other spawn-data value still fails closed as `Unsupported`. The `SG_NG+_MilkMolars` and `SG_NG+_MilkMolarsUnderwater` group-asset markers still uniquely identify the two groups; their individual counts are still authoritative.
+
+## Accepted empty underwater group
+
+Validated against a live autosave on 2026-08-25 where the `SG_NG+_MilkMolarsUnderwater` group carried `count=0`. In that case the serialization ends immediately after the 4-byte count field: no reserved field and no entries follow. Reading the 4 bytes that would otherwise be the reserved field instead reads unrelated adjacent data. The count=0 path therefore returns an empty list without consuming any further bytes. The normal group is still required to have at least one entry; an absent or empty normal group still fails closed.
+
 ## Accepted bounded refresh implementation
 
 Recursive monitored-save discovery runs as cancellable worker work and selects the latest `World.csav` in one pass. Ordering remains newest `LastWriteTimeUtc` first with case-insensitive full-path ordering as the tie-break, matching the prior observable selection without sorting and retaining every candidate. A newer watcher event cancels in-flight discovery or analysis and reuses the existing one-second debounce.
