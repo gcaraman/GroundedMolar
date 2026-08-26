@@ -3,9 +3,14 @@ using System.Text.Json;
 using GroundedMolar.Core;
 namespace GroundedMolar.App;
 
-internal sealed record AppSettings(string SavePath, string SaveFolder, bool MonitorFolder, double UnapproachedOpacity = MolarMarkerOpacity.DefaultUnapproached)
+internal sealed record AppSettings(
+    string SavePath,
+    string SaveFolder,
+    bool MonitorFolder,
+    double UnapproachedOpacity = MolarMarkerOpacity.DefaultUnapproached,
+    bool ShowGuideHints = false)
 {
-    public static AppSettings Default { get; } = new("", "", false, MolarMarkerOpacity.DefaultUnapproached);
+    public static AppSettings Default { get; } = new("", "", false, MolarMarkerOpacity.DefaultUnapproached, false);
 }
 
 internal static class AppSettingsStore
@@ -13,6 +18,8 @@ internal static class AppSettingsStore
     private static readonly string DirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GroundedMolar");
     private static readonly string FilePath = Path.Combine(DirectoryPath, "settings.json");
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
+
+    public static bool HasChanged(AppSettings persisted, AppSettings current) => persisted != current;
 
     public static AppSettings Load()
     {

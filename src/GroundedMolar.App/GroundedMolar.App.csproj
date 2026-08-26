@@ -21,6 +21,7 @@
     <ProjectReference Include="..\GroundedMolar.Core\GroundedMolar.Core.csproj" />
     <Content Include="..\..\ooz.exe" Link="ooz.exe" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <Content Include="Assets\T_UI_MM_MorselGeneric.png" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\preview\grounded-marker-free-map.png" Link="Assets\grounded-marker-free-map.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="Data\milk-molar-guide.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\grounded-marker-free-map.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 </Project>

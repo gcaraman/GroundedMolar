@@ -1,7 +1,10 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -15,11 +18,13 @@ public partial class MainWindow : Window
 {
     private const double MapSize = SaveMapImageRenderer.LogicalMapSize;
     private const double MarkerSize = 32;
+    private const string CommunityGuideUrl = "https://grounded.fandom.com/wiki/Map:Ng_plus_molar";
     private static readonly Lazy<SaveAnalysisService> AnalysisService = new(() => new(
         new GroundedCsavDecoder(new OozKrakenDecoder(Path.Combine(AppContext.BaseDirectory, "ooz.exe"))),
         new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1())), LazyThreadSafetyMode.ExecutionAndPublication);
     private readonly DispatcherTimer _reloadTimer = new() { Interval = TimeSpan.FromSeconds(1) };
-    private readonly List<(Image Element, PixelPoint Point, MolarApproachState ApproachState)> _markerElements = [];
+    private readonly List<MarkerElementState> _markerElements = [];
+    private Popup? _openMarkerPopup;
     private FileSystemWatcher? _saveWatcher;
     private string _saveFolder = "";
     private bool _monitorFolder;
@@ -32,7 +37,9 @@ public partial class MainWindow : Window
     private double _mapLeft;
     private double _mapTop;
     private double _unapproachedOpacity = MolarMarkerOpacity.DefaultUnapproached;
+    private bool _showGuideHints;
     private bool _settingsApplied;
+    private AppSettings _persistedSettings = AppSettings.Default;
     private CancellationTokenSource? _screenshotCancellation;
     private CancellationTokenSource? _analysisCancellation;
 
@@ -116,27 +123,27 @@ public partial class MainWindow : Window
     private async Task LoadSaveAsync(bool userInitiated)
     {
         if (_isLoading) { _analysisCancellation?.Cancel(); ScheduleReload(); return; }
-        var path = _monitorFolder
-            ? FindCurrentSave(_saveFolder)
-            : File.Exists(SavePathBox.Text.Trim()) ? SavePathBox.Text.Trim() : null;
-        if (path is null)
-        {
-            ClearPreview("No World.csav was found.");
-            return;
-        }
-        SavePathBox.Text = path;
-        UpdateCurrentSavePresentation(path);
         _isLoading = true;
         _analysisCancellation = new CancellationTokenSource();
         var analysisCancellation = _analysisCancellation;
         RefreshButton.IsEnabled = false;
-        SetConfidenceState("Status.Warning");
         try
         {
+            var path = _monitorFolder
+                ? await Task.Run(() => SaveDiscovery.FindCurrentSave(_saveFolder, analysisCancellation.Token), analysisCancellation.Token)
+                : File.Exists(SavePathBox.Text.Trim()) ? SavePathBox.Text.Trim() : null;
+            if (path is null)
+            {
+                ClearPreview("No World.csav was found.");
+                return;
+            }
+            SavePathBox.Text = path;
+            UpdateCurrentSavePresentation(path);
+            SetConfidenceState("Status.Warning");
             var analysis = await AnalyzeWithRetryAsync(path, analysisCancellation.Token);
             if (analysis.Confidence == SaveConfidence.Validated)
             {
-                MapPreview.Source = SaveMapImageRenderer.LoadMap(analysis);
+                MapPreview.Source = await SaveMapImageRenderer.LoadMapAsync(analysis, analysisCancellation.Token);
                 RebuildMarkers(analysis);
                 CurrentSaveSummary.Text = analysis.Uncollected.Count == 1 ? "Validated • 1 milk molar remaining" : $"Validated • {analysis.Uncollected.Count} milk molars remaining";
                 PreviewOverlay.Visibility = Visibility.Collapsed;
@@ -174,7 +181,11 @@ public partial class MainWindow : Window
     private void ClearPreview(string message)
     {
         MapPreview.Source = null;
-        foreach (var marker in _markerElements) MapSurface.Children.Remove(marker.Element);
+        CloseMarkerPopup();
+        foreach (var marker in _markerElements)
+        {
+            MapSurface.Children.Remove(marker.Element);
+        }
         _markerElements.Clear();
         PreviewPlaceholder.Text = message;
         PreviewOverlay.Visibility = Visibility.Visible;
@@ -182,7 +193,11 @@ public partial class MainWindow : Window
 
     private void RebuildMarkers(MolarAnalysis analysis)
     {
-        foreach (var marker in _markerElements) MapSurface.Children.Remove(marker.Element);
+        CloseMarkerPopup();
+        foreach (var marker in _markerElements)
+        {
+            MapSurface.Children.Remove(marker.Element);
+        }
         _markerElements.Clear();
         var icon = SaveMapImageRenderer.LoadMarkerIcon();
         var projector = new CoordinateProjector();
@@ -193,21 +208,163 @@ public partial class MainWindow : Window
                 MapZoom.NormalizeCoordinate(exportedPoint.X, SaveMapImageRenderer.ExportedMapSize, MapSize),
                 MapZoom.NormalizeCoordinate(exportedPoint.Y, SaveMapImageRenderer.ExportedMapSize, MapSize));
             if (point.X is < 0 or > MapSize || point.Y is < 0 or > MapSize) continue;
-            var element = new Image
+            var image = new Image
             {
                 Source = icon,
                 Width = MarkerSize,
                 Height = MarkerSize,
-                Opacity = MolarMarkerOpacity.Resolve(marker.ApproachState, _unapproachedOpacity),
                 Stretch = Stretch.Fill,
-                IsHitTestVisible = false,
                 SnapsToDevicePixels = true
             };
-            RenderOptions.SetBitmapScalingMode(element, BitmapScalingMode.NearestNeighbor);
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.NearestNeighbor);
+            var element = new Button
+            {
+                Width = MarkerSize,
+                Height = MarkerSize,
+                MinWidth = 0,
+                MinHeight = 0,
+                Padding = new Thickness(0),
+                BorderThickness = new Thickness(0),
+                Background = Brushes.Transparent,
+                Content = image,
+                Opacity = MolarMarkerOpacity.Resolve(marker.ApproachState, _unapproachedOpacity),
+                Cursor = Cursors.Hand,
+                ToolTip = "Open Milk Molar information"
+            };
+            System.Windows.Automation.AutomationProperties.SetName(element, "Open Milk Molar information");
+            var markerState = new MarkerElementState(element, point, marker.ApproachState, marker);
+            element.Click += (_, _) => ToggleMarkerPopup(markerState);
             Panel.SetZIndex(element, 1);
             MapSurface.Children.Add(element);
-            _markerElements.Add((element, point, marker.ApproachState));
+            _markerElements.Add(markerState);
         }
+    }
+
+    private MarkerPopupState CreateMarkerPopup(Button placementTarget, MolarSpawn marker)
+    {
+        MolarHint? guide;
+        try { guide = MolarHintCatalog.FindClosest(marker); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            guide = null;
+        }
+        var hintText = new TextBlock
+        {
+            Margin = new Thickness(0, 3, 0, 0),
+            FontSize = 16,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (Brush)FindResource("Text.Primary"),
+            TextWrapping = TextWrapping.Wrap,
+            Text = guide?.Description ?? "No community guide hint could be matched to this marker."
+        };
+        var hintPanelContent = new StackPanel();
+        hintPanelContent.Children.Add(new TextBlock
+        {
+            FontFamily = (FontFamily)FindResource("Font.Display"),
+            FontSize = 12,
+            FontWeight = FontWeights.Bold,
+            Foreground = (Brush)FindResource("Text.Heading"),
+            Text = "HINT"
+        });
+        hintPanelContent.Children.Add(hintText);
+        var hintPanel = new Border
+        {
+            Margin = new Thickness(0, 10, 0, 0),
+            Padding = new Thickness(10, 8, 10, 9),
+            Background = (Brush)FindResource("Surface.Window"),
+            BorderBrush = (Brush)FindResource("Accent.Selected"),
+            BorderThickness = new Thickness(4, 1, 1, 1),
+            CornerRadius = new CornerRadius(2),
+            Child = hintPanelContent
+        };
+        var warningText = new TextBlock
+        {
+            Margin = new Thickness(6, 7, 0, 0),
+            FontSize = 10,
+            Foreground = (Brush)FindResource("Text.Secondary"),
+            TextWrapping = TextWrapping.Wrap,
+            Text = "Community guide text is approximate."
+        };
+
+        var stack = new StackPanel();
+        var title = new TextBlock
+        {
+            FontFamily = (FontFamily)FindResource("Font.Display"),
+            FontSize = 18,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (Brush)FindResource("Text.Heading")
+        };
+        stack.Children.Add(title);
+        stack.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 4, 0, 0),
+            Foreground = (Brush)FindResource("Text.Secondary"),
+            Text = $"{(marker.IsUnderwater ? "Underwater spawn" : "Normal spawn")} • {FriendlyApproachState(marker.ApproachState)}"
+        });
+        stack.Children.Add(hintPanel);
+        stack.Children.Add(warningText);
+
+        var popup = new Popup
+        {
+            PlacementTarget = placementTarget,
+            Placement = PlacementMode.MousePoint,
+            StaysOpen = false,
+            AllowsTransparency = true,
+            Child = new Border
+            {
+                Width = 330,
+                Padding = new Thickness(16),
+                Background = (Brush)FindResource("Surface.Panel"),
+                BorderBrush = (Brush)FindResource("Accent.Primary"),
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(3),
+                Child = stack
+            }
+        };
+        var state = new MarkerPopupState(popup, title, hintPanel, warningText, guide);
+        ApplyGuideHintVisibility(state);
+        return state;
+    }
+
+    private void ApplyGuideHintVisibility(MarkerPopupState state)
+    {
+        var hasGuide = state.Guide is not null;
+        state.Title.Text = _showGuideHints && hasGuide
+            ? $"MILK MOLAR • GUIDE #{state.Guide!.Number}"
+            : "MILK MOLAR";
+        state.HintPanel.Visibility = _showGuideHints ? Visibility.Visible : Visibility.Collapsed;
+        state.WarningText.Visibility = _showGuideHints && hasGuide ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static string FriendlyApproachState(MolarApproachState state) => state switch
+    {
+        MolarApproachState.Approached => "approached",
+        MolarApproachState.Unapproached => "not yet approached",
+        _ => "approach unknown"
+    };
+
+    private void ToggleMarkerPopup(MarkerElementState marker)
+    {
+        marker.PopupState ??= CreateMarkerPopup(marker.Element, marker.Marker);
+        var popup = marker.PopupState.Popup;
+        if (popup.IsOpen) { popup.IsOpen = false; _openMarkerPopup = null; return; }
+        CloseMarkerPopup();
+        _openMarkerPopup = popup;
+        popup.Closed += MarkerPopupClosed;
+        popup.IsOpen = true;
+    }
+
+    private void MarkerPopupClosed(object? sender, EventArgs e)
+    {
+        if (sender is Popup popup) popup.Closed -= MarkerPopupClosed;
+        if (ReferenceEquals(_openMarkerPopup, sender)) _openMarkerPopup = null;
+    }
+
+    private void CloseMarkerPopup()
+    {
+        if (_openMarkerPopup is null) return;
+        _openMarkerPopup.IsOpen = false;
+        _openMarkerPopup = null;
     }
 
     private double FitScale => MapZoom.FitScale(MapScroller.ViewportWidth, MapScroller.ViewportHeight, MapSize, MapSize);
@@ -253,6 +410,7 @@ public partial class MainWindow : Window
     }
     private void MapMouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (FindAncestor<Button>(e.OriginalSource as DependencyObject) is { } button && _markerElements.Any(x => ReferenceEquals(x.Element, button))) return;
         if (MapPreview.Source is null || (MapScroller.ScrollableWidth <= 0 && MapScroller.ScrollableHeight <= 0)) return;
         _isPanning = true;
         _panStart = e.GetPosition(MapScroller);
@@ -261,6 +419,15 @@ public partial class MainWindow : Window
         MapScroller.Cursor = Cursors.SizeAll;
         MapScroller.CaptureMouse();
         e.Handled = true;
+    }
+    private static T? FindAncestor<T>(DependencyObject? element) where T : DependencyObject
+    {
+        while (element is not null)
+        {
+            if (element is T match) return match;
+            element = VisualTreeHelper.GetParent(element);
+        }
+        return null;
     }
     private void MapMouseMove(object sender, MouseEventArgs e)
     {
@@ -426,26 +593,20 @@ public partial class MainWindow : Window
         return "Manual save";
     }
 
-    private static string? FindCurrentSave(string folder)
-    {
-        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder)) return null;
-        var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, MatchCasing = MatchCasing.CaseInsensitive };
-        return Directory.EnumerateFiles(folder, "World.csav", options)
-            .Select(path => new FileInfo(path)).OrderByDescending(file => file.LastWriteTimeUtc)
-            .ThenBy(file => file.FullName, StringComparer.OrdinalIgnoreCase).Select(file => file.FullName).FirstOrDefault();
-    }
-
     private void SaveChanged(object sender, FileSystemEventArgs e) => Dispatcher.BeginInvoke(ScheduleReload);
     private void ScheduleReload() { _reloadTimer.Stop(); _reloadTimer.Start(); }
 
     private void ApplySettings(AppSettings settings)
     {
+        _persistedSettings = settings;
         SavePathBox.Text = settings.SavePath;
         _monitorFolder = settings.MonitorFolder;
         _saveFolder = !string.IsNullOrWhiteSpace(settings.SaveFolder) ? settings.SaveFolder : Path.GetDirectoryName(settings.SavePath) ?? "";
         _unapproachedOpacity = MolarMarkerOpacity.Clamp(settings.UnapproachedOpacity);
+        _showGuideHints = settings.ShowGuideHints;
         UnapproachedOpacitySlider.Value = _unapproachedOpacity;
         UnapproachedOpacityText.Text = $"{_unapproachedOpacity:P0}";
+        ShowGuideHintsCheckBox.IsChecked = _showGuideHints;
         MonitorFolderCheckBox.IsChecked = _monitorFolder;
         UpdateMonitorStatus();
         if (!string.IsNullOrWhiteSpace(settings.SavePath)) UpdateCurrentSavePresentation(settings.SavePath);
@@ -472,11 +633,137 @@ public partial class MainWindow : Window
         if (_settingsApplied) PersistSettings();
     }
 
+    private void GuideHintsChanged(object sender, RoutedEventArgs e)
+    {
+        if (!_settingsApplied) return;
+        _showGuideHints = ShowGuideHintsCheckBox.IsChecked == true;
+        CloseMarkerPopup();
+        foreach (var marker in _markerElements)
+            if (marker.PopupState is not null) ApplyGuideHintVisibility(marker.PopupState);
+        PersistSettings();
+    }
+
+    private void GuideLinkClick(object sender, RoutedEventArgs e)
+    {
+        if (!ConfirmExternalGuideOpen()) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo(CommunityGuideUrl) { UseShellExecute = true });
+        }
+        catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
+        {
+            MessageBox.Show(this, "The community guide could not be opened in your browser.",
+                "Unable to open link", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private bool ConfirmExternalGuideOpen()
+    {
+        var openButton = new Button
+        {
+            Content = "Open",
+            Width = 104,
+            IsDefault = true,
+            Style = (Style)FindResource("PrimaryButton")
+        };
+        var cancelButton = new Button
+        {
+            Content = "Cancel",
+            Width = 104,
+            Margin = new Thickness(10, 0, 0, 0),
+            IsCancel = true,
+            Style = (Style)FindResource("SecondaryButton")
+        };
+        var buttons = new StackPanel
+        {
+            Margin = new Thickness(0, 18, 0, 0),
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        buttons.Children.Add(openButton);
+        buttons.Children.Add(cancelButton);
+
+        var content = new StackPanel();
+        content.Children.Add(new TextBlock
+        {
+            FontFamily = (FontFamily)FindResource("Font.Display"),
+            FontSize = 19,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (Brush)FindResource("Text.Heading"),
+            Text = "OPEN EXTERNAL GUIDE?"
+        });
+        content.Children.Add(new TextBlock
+        {
+            Margin = new Thickness(0, 10, 0, 8),
+            Foreground = (Brush)FindResource("Text.Primary"),
+            TextWrapping = TextWrapping.Wrap,
+            Text = "Your default browser will be opened to this address:"
+        });
+        content.Children.Add(new TextBox
+        {
+            Text = CommunityGuideUrl,
+            IsReadOnly = true,
+            Padding = new Thickness(8),
+            Foreground = (Brush)FindResource("Text.Primary"),
+            Background = (Brush)FindResource("Surface.Window"),
+            BorderBrush = (Brush)FindResource("Border.Subtle"),
+            BorderThickness = new Thickness(1),
+            TextWrapping = TextWrapping.Wrap
+        });
+        content.Children.Add(buttons);
+
+        var dialog = new Window
+        {
+            Title = "Open community guide",
+            Owner = this,
+            Width = 520,
+            SizeToContent = SizeToContent.Height,
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Style = (Style)FindResource("GroundedWindow"),
+            Content = new Border
+            {
+                Padding = new Thickness(22),
+                Background = (Brush)FindResource("Surface.Panel"),
+                Child = content
+            }
+        };
+        openButton.Click += (_, _) => dialog.DialogResult = true;
+        return dialog.ShowDialog() == true;
+    }
+
     private void PersistSettings()
     {
-        try { AppSettingsStore.Save(new(SavePathBox.Text.Trim(), _saveFolder, _monitorFolder, _unapproachedOpacity)); }
+        var settings = new AppSettings(SavePathBox.Text.Trim(), _saveFolder, _monitorFolder, _unapproachedOpacity, _showGuideHints);
+        if (!AppSettingsStore.HasChanged(_persistedSettings, settings)) return;
+        try
+        {
+            AppSettingsStore.Save(settings);
+            _persistedSettings = settings;
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
     private void OnClosed(object? sender, EventArgs e) { _reloadTimer.Stop(); _saveWatcher?.Dispose(); _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose(); _screenshotCancellation?.Cancel(); _screenshotCancellation?.Dispose(); }
+
+    private sealed record MarkerPopupState(
+        Popup Popup,
+        TextBlock Title,
+        FrameworkElement HintPanel,
+        TextBlock WarningText,
+        MolarHint? Guide);
+
+    private sealed class MarkerElementState(
+        Button element,
+        PixelPoint point,
+        MolarApproachState approachState,
+        MolarSpawn marker)
+    {
+        public Button Element { get; } = element;
+        public PixelPoint Point { get; } = point;
+        public MolarApproachState ApproachState { get; } = approachState;
+        public MolarSpawn Marker { get; } = marker;
+        public MarkerPopupState? PopupState { get; set; }
+    }
 }

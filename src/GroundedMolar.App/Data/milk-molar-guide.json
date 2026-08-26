@@ -1,0 +1,1787 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "name": "Grounded Wiki NG+ Milk Molar interactive map",
+    "url": "https://grounded.fandom.com/wiki/Map:Ng_plus_molar",
+    "retrieved": "2026-08-24",
+    "note": "Descriptions and displayed molar numbers are copied from each source marker popup. Repeated descriptions are retained because distinct marker pins can share the same guide text."
+  },
+  "coordinateSystem": {
+    "width": 1254,
+    "height": 1254,
+    "origin": "top-left",
+    "sourcePositionOrder": [
+      "y",
+      "x"
+    ],
+    "note": "guideX = source marker position[1]; guideY = source marker position[0]."
+  },
+  "categories": [
+    {
+      "id": 1,
+      "name": "Above ground"
+    },
+    {
+      "id": 2,
+      "name": "Underwater"
+    },
+    {
+      "id": 3,
+      "name": "Underground or inside a structure"
+    }
+  ],
+  "entries": [
+    {
+      "id": 1,
+      "number": 215,
+      "categoryId": 3,
+      "guideX": 1037.325085,
+      "guideY": 294.686152,
+      "description": "Undershed, on a lip higher up on the south-western edge of the pit."
+    },
+    {
+      "id": 2,
+      "number": 214,
+      "categoryId": 3,
+      "guideX": 1046.343149,
+      "guideY": 310.420433,
+      "description": "Undershed, in the pipe over the southern end of the pit."
+    },
+    {
+      "id": 3,
+      "number": 213,
+      "categoryId": 3,
+      "guideX": 1090.422502,
+      "guideY": 341.953255,
+      "description": "Undershed, in the big hole. North-eastern side, nestled on some rocks by the water."
+    },
+    {
+      "id": 4,
+      "number": 212,
+      "categoryId": 3,
+      "guideX": 1065.334122,
+      "guideY": 399.921884,
+      "description": "Undershed, in the tunnels in the Orb Weaver ravine."
+    },
+    {
+      "id": 5,
+      "number": 158,
+      "categoryId": 1,
+      "guideX": 983.652272,
+      "guideY": 310.131481,
+      "description": "Inside the pot with the shears"
+    },
+    {
+      "id": 6,
+      "number": 159,
+      "categoryId": 3,
+      "guideX": 961.742255,
+      "guideY": 287.159072,
+      "description": "Under the deck. Up against the bag of fertilizer"
+    },
+    {
+      "id": 7,
+      "number": 157,
+      "categoryId": 3,
+      "guideX": 949.017227,
+      "guideY": 267.364877,
+      "description": "Inside the can"
+    },
+    {
+      "id": 8,
+      "number": 161,
+      "categoryId": 1,
+      "guideX": 992.140931,
+      "guideY": 444.098762,
+      "description": "Under the hose at the foot of the table"
+    },
+    {
+      "id": 9,
+      "number": 162,
+      "categoryId": 1,
+      "guideX": 992.142861,
+      "guideY": 517.9341,
+      "description": "At the top of the chair. You'll have to build. Sorry. Tip: you can build towards the hammer"
+    },
+    {
+      "id": 10,
+      "number": 165,
+      "categoryId": 1,
+      "guideX": 1012.099502,
+      "guideY": 595.032572,
+      "description": "On top of the battery"
+    },
+    {
+      "id": 11,
+      "number": 164,
+      "categoryId": 1,
+      "guideX": 998.105074,
+      "guideY": 582.070109,
+      "description": "Up against the baseball"
+    },
+    {
+      "id": 12,
+      "number": 166,
+      "categoryId": 1,
+      "guideX": 1072.58813,
+      "guideY": 600.565628,
+      "description": "Across the pond outside the Undershed entrance"
+    },
+    {
+      "id": 13,
+      "number": 154,
+      "categoryId": 3,
+      "guideX": 1127.842312,
+      "guideY": 121.749226,
+      "description": "Inside the can"
+    },
+    {
+      "id": 14,
+      "number": 153,
+      "categoryId": 3,
+      "guideX": 1087.431855,
+      "guideY": 144.528245,
+      "description": "Just inside the large, cavernous room in the Termite Den"
+    },
+    {
+      "id": 15,
+      "number": 155,
+      "categoryId": 1,
+      "guideX": 1044.834136,
+      "guideY": 197.026247,
+      "description": "At the base of the wood pile"
+    },
+    {
+      "id": 16,
+      "number": 152,
+      "categoryId": 3,
+      "guideX": 1027.148747,
+      "guideY": 165.210979,
+      "description": "Just inside the lower entrance of the Termite Den"
+    },
+    {
+      "id": 17,
+      "number": 156,
+      "categoryId": 1,
+      "guideX": 1013.005727,
+      "guideY": 216.466203,
+      "description": "Up on the log on the deck"
+    },
+    {
+      "id": 18,
+      "number": 150,
+      "categoryId": 1,
+      "guideX": 955.108144,
+      "guideY": 195.615758,
+      "description": "Near the field station on the log"
+    },
+    {
+      "id": 19,
+      "number": 151,
+      "categoryId": 1,
+      "guideX": 959.600866,
+      "guideY": 130.139612,
+      "description": "On the hub of the bike wheel. You can parkour up the plant on the west side of the wheel"
+    },
+    {
+      "id": 20,
+      "number": 149,
+      "categoryId": 1,
+      "guideX": 904.114512,
+      "guideY": 140.13719,
+      "description": "Up in the bike basket. You can use the handy gnat to build a zipline on the fence behind the handlebars, then jump across."
+    },
+    {
+      "id": 21,
+      "number": 148,
+      "categoryId": 1,
+      "guideX": 883.606552,
+      "guideY": 184.132105,
+      "description": "At the bottom of the ravine near the orb weaver cave"
+    },
+    {
+      "id": 22,
+      "number": 145,
+      "categoryId": 1,
+      "guideX": 842.111328,
+      "guideY": 196.644819,
+      "description": "On top of the BBQ wheel. Building is the easiest way to reach it"
+    },
+    {
+      "id": 23,
+      "number": 147,
+      "categoryId": 1,
+      "guideX": 858.098364,
+      "guideY": 221.64167,
+      "description": "On top of the pipe in the ravine"
+    },
+    {
+      "id": 24,
+      "number": 146,
+      "categoryId": 1,
+      "guideX": 869.582218,
+      "guideY": 221.118949,
+      "description": "On a ledge in the ravine"
+    },
+    {
+      "id": 25,
+      "number": 143,
+      "categoryId": 3,
+      "guideX": 790.114967,
+      "guideY": 273.623144,
+      "description": "Just underneath the charcoal bag"
+    },
+    {
+      "id": 26,
+      "number": 144,
+      "categoryId": 1,
+      "guideX": 773.342679,
+      "guideY": 138.302996,
+      "description": "At the base of the rock wall next to the MIX.R"
+    },
+    {
+      "id": 27,
+      "number": 141,
+      "categoryId": 1,
+      "guideX": 766.103482,
+      "guideY": 257.140096,
+      "description": "Next to the rock wall in the ash"
+    },
+    {
+      "id": 28,
+      "number": 142,
+      "categoryId": 1,
+      "guideX": 748.607007,
+      "guideY": 277.140823,
+      "description": "On top of the BBQ lid"
+    },
+    {
+      "id": 29,
+      "number": 14,
+      "categoryId": 1,
+      "guideX": 763.103709,
+      "guideY": 303.634405,
+      "description": "At the base of the rock wall next to the BBQ lid"
+    },
+    {
+      "id": 30,
+      "number": 138,
+      "categoryId": 1,
+      "guideX": 739.576645,
+      "guideY": 423.597958,
+      "description": "In the ravine next to the field station"
+    },
+    {
+      "id": 31,
+      "number": 160,
+      "categoryId": 1,
+      "guideX": 888.068116,
+      "guideY": 439.594084,
+      "description": "On the pedal of the bike"
+    },
+    {
+      "id": 32,
+      "number": 163,
+      "categoryId": 3,
+      "guideX": 835.61383,
+      "guideY": 493.099532,
+      "description": "In the Ladybird Larva Cave, through the dead roots"
+    },
+    {
+      "id": 33,
+      "number": 167,
+      "categoryId": 1,
+      "guideX": 1153.054925,
+      "guideY": 560.125082,
+      "description": "At the base of the branch near the field station"
+    },
+    {
+      "id": 34,
+      "number": 169,
+      "categoryId": 1,
+      "guideX": 1036.128499,
+      "guideY": 752.078585,
+      "description": "On a plant inside the tire"
+    },
+    {
+      "id": 35,
+      "number": 170,
+      "categoryId": 3,
+      "guideX": 1085.590632,
+      "guideY": 798.528701,
+      "description": "In the corner of the toolbox drawer with the Sticky Fingers trinket"
+    },
+    {
+      "id": 36,
+      "number": 171,
+      "categoryId": 3,
+      "guideX": 1109.096545,
+      "guideY": 797.589846,
+      "description": "Inside the Black Widow den"
+    },
+    {
+      "id": 37,
+      "number": 173,
+      "categoryId": 3,
+      "guideX": 1177.086424,
+      "guideY": 838.080038,
+      "description": "In the can atop the paint bucket"
+    },
+    {
+      "id": 38,
+      "number": 174,
+      "categoryId": 1,
+      "guideX": 1176.102117,
+      "guideY": 821.084155,
+      "description": "Between the trash bags and the paint bucket"
+    },
+    {
+      "id": 39,
+      "number": 172,
+      "categoryId": 1,
+      "guideX": 1164.104846,
+      "guideY": 799.589361,
+      "description": "On top of the trash bag. Jumping or building from the top of Brawny Boy Bin is the easiest way to get this"
+    },
+    {
+      "id": 40,
+      "number": 176,
+      "categoryId": 1,
+      "guideX": 1183.836825,
+      "guideY": 922.503163,
+      "description": "On the right arm of the lawn molar behind the switches"
+    },
+    {
+      "id": 41,
+      "number": 177,
+      "categoryId": 1,
+      "guideX": 1191.152813,
+      "guideY": 1010.509617,
+      "description": "Atop a bottom support beam of the ladder"
+    },
+    {
+      "id": 42,
+      "number": 209,
+      "categoryId": 1,
+      "guideX": 1179.882284,
+      "guideY": 1101.350834,
+      "description": "On some Stump roots near the pipes"
+    },
+    {
+      "id": 43,
+      "number": 211,
+      "categoryId": 3,
+      "guideX": 1126.822419,
+      "guideY": 1038.800652,
+      "description": "In the final room of the Stump Lab with the Stump Chip, behind the Supreme Quartzite"
+    },
+    {
+      "id": 44,
+      "number": 210,
+      "categoryId": 3,
+      "guideX": 1112.000837,
+      "guideY": 1041.628394,
+      "description": "Just inside the entrance to the Stump Lab"
+    },
+    {
+      "id": 45,
+      "number": 207,
+      "categoryId": 1,
+      "guideX": 1110.940418,
+      "guideY": 1060.715654,
+      "description": "At the very top of the Stump on an offshoot. The Handy Gnat can build floors and a zipline anchor off of the offshoot for easy access"
+    },
+    {
+      "id": 46,
+      "number": 206,
+      "categoryId": 1,
+      "guideX": 1104.224432,
+      "guideY": 992.142906,
+      "description": "At the very top of the Stump on an offshoot. The Handy Gnat can build floors and a zipline anchor off of the offshoot for easy access"
+    },
+    {
+      "id": 47,
+      "number": 205,
+      "categoryId": 1,
+      "guideX": 1067.458096,
+      "guideY": 1015.121736,
+      "description": "Among the roots on the south side of the Stump"
+    },
+    {
+      "id": 48,
+      "number": 208,
+      "categoryId": 1,
+      "guideX": 1083.70949,
+      "guideY": 1051.173822,
+      "description": "On a small, peeled back section outside the Stump"
+    },
+    {
+      "id": 49,
+      "number": 175,
+      "categoryId": 1,
+      "guideX": 1095.377797,
+      "guideY": 869.137921,
+      "description": "On the front of the lawn mower"
+    },
+    {
+      "id": 50,
+      "number": 204,
+      "categoryId": 3,
+      "guideX": 1057.205369,
+      "guideY": 895.287001,
+      "description": "In the Fire Anthill. In a room through the Lawn Mower entrance"
+    },
+    {
+      "id": 51,
+      "number": 203,
+      "categoryId": 3,
+      "guideX": 1020.76396,
+      "guideY": 914.008035,
+      "description": "In the Fire Anthill. Around a corner from the Supreme Marble overhanging an open cave"
+    },
+    {
+      "id": 52,
+      "number": 201,
+      "categoryId": 3,
+      "guideX": 1022.51259,
+      "guideY": 963.513301,
+      "description": "In the Fire Anthill. Jump down to the bottom of the chasm and take the tunnel opposite the Yogi Swole Head"
+    },
+    {
+      "id": 53,
+      "number": 200,
+      "categoryId": 1,
+      "guideX": 1001.865763,
+      "guideY": 963.134108,
+      "description": "On a small ledge near the top of the Fire Ant chasm"
+    },
+    {
+      "id": 54,
+      "number": 178,
+      "categoryId": 1,
+      "guideX": 981.186726,
+      "guideY": 932.414131,
+      "description": "Between the Punch-O and the large branch"
+    },
+    {
+      "id": 55,
+      "number": 202,
+      "categoryId": 3,
+      "guideX": 957.500016,
+      "guideY": 930.649104,
+      "description": "In the Fire Anthill. On the upper floor of the large cave with the candy and gum"
+    },
+    {
+      "id": 56,
+      "number": 179,
+      "categoryId": 1,
+      "guideX": 961.6488,
+      "guideY": 981.455023,
+      "description": "At the tip of the branch with the wasp nest"
+    },
+    {
+      "id": 57,
+      "number": 180,
+      "categoryId": 1,
+      "guideX": 966.862587,
+      "guideY": 998.33129,
+      "description": "At the tip of a small branch near the end of the main branch"
+    },
+    {
+      "id": 58,
+      "number": 187,
+      "categoryId": 1,
+      "guideX": 953.607712,
+      "guideY": 1113.738816,
+      "description": "On top of the wheelbarrow. The Handy Gnat can be used to build a zipline anchor by the field station for easy access"
+    },
+    {
+      "id": 59,
+      "number": 186,
+      "categoryId": 1,
+      "guideX": 929.218077,
+      "guideY": 1137.774624,
+      "description": "On a brick of the wall, almost directly below the field station. The Handy Gnat can be used to build a zipline anchor by the field station for easy access"
+    },
+    {
+      "id": 60,
+      "number": 188,
+      "categoryId": 1,
+      "guideX": 858.133341,
+      "guideY": 1138.484899,
+      "description": "On the eastern fence just before the switch from stone fence to wood fence"
+    },
+    {
+      "id": 61,
+      "number": 189,
+      "categoryId": 1,
+      "guideX": 875.819775,
+      "guideY": 1026.082063,
+      "description": "In the blueberry tree the Wolf Spider sleeps under"
+    },
+    {
+      "id": 62,
+      "number": 185,
+      "categoryId": 1,
+      "guideX": 913.998877,
+      "guideY": 922.870844,
+      "description": "Under the ledge of a cave next to the Milk Molar Bottle"
+    },
+    {
+      "id": 63,
+      "number": 184,
+      "categoryId": 3,
+      "guideX": 878.278004,
+      "guideY": 915.423619,
+      "description": "Next to the skeleton in the cave to the Milk Molar Bottle"
+    },
+    {
+      "id": 64,
+      "number": 183,
+      "categoryId": 1,
+      "guideX": 900.567467,
+      "guideY": 848.971678,
+      "description": "Between the field station and Dan Hamster II's skeleton"
+    },
+    {
+      "id": 65,
+      "number": 181,
+      "categoryId": 1,
+      "guideX": 953.59348,
+      "guideY": 839.07458,
+      "description": "Atop the neck of the Yoked Girth figure"
+    },
+    {
+      "id": 66,
+      "number": 182,
+      "categoryId": 2,
+      "guideX": 921.792973,
+      "guideY": 744.698686,
+      "description": "Underwater in Pipe Cave"
+    },
+    {
+      "id": 67,
+      "number": 195,
+      "categoryId": 1,
+      "guideX": 811.211814,
+      "guideY": 1125.801157,
+      "description": "Right next to the juice box"
+    },
+    {
+      "id": 68,
+      "number": 139,
+      "categoryId": 1,
+      "guideX": 722.907658,
+      "guideY": 291.082087,
+      "description": "On top of the lantern"
+    },
+    {
+      "id": 69,
+      "number": 12,
+      "categoryId": 1,
+      "guideX": 784.271265,
+      "guideY": 508.028152,
+      "description": "Atop the stone wall"
+    },
+    {
+      "id": 70,
+      "number": 69,
+      "categoryId": 2,
+      "guideX": 819.792871,
+      "guideY": 633.026397,
+      "description": "Inside the Mossy Key cave. The entrance is at the base of the fan next to the broken lab section"
+    },
+    {
+      "id": 71,
+      "number": 43,
+      "categoryId": 1,
+      "guideX": 841.046112,
+      "guideY": 902.756054,
+      "description": "Halfway up the stone wall"
+    },
+    {
+      "id": 72,
+      "number": 190,
+      "categoryId": 1,
+      "guideX": 814.307029,
+      "guideY": 966.553762,
+      "description": "In the cassette tape on the rock wall"
+    },
+    {
+      "id": 73,
+      "number": 68,
+      "categoryId": 2,
+      "guideX": 758.813567,
+      "guideY": 946.068958,
+      "description": "Inside the tunnel to the pagoda outpost. The Pond Lab must be completed for this to open"
+    },
+    {
+      "id": 74,
+      "number": 66,
+      "categoryId": 2,
+      "guideX": 721.572039,
+      "guideY": 966.314054,
+      "description": "At the bottom of the pond underneath a leaf"
+    },
+    {
+      "id": 75,
+      "number": 67,
+      "categoryId": 2,
+      "guideX": 712.303049,
+      "guideY": 917.833973,
+      "description": "At the bottom of the pond on top of a leaf"
+    },
+    {
+      "id": 76,
+      "number": 199,
+      "categoryId": 3,
+      "guideX": 735.185711,
+      "guideY": 1081.394904,
+      "description": "In the lab tunnel out of Moldroc's Castle"
+    },
+    {
+      "id": 77,
+      "number": 198,
+      "categoryId": 3,
+      "guideX": 714.023918,
+      "guideY": 1079.003422,
+      "description": "On the upper floor of Moldorc's mouth"
+    },
+    {
+      "id": 78,
+      "number": 197,
+      "categoryId": 1,
+      "guideX": 758.039403,
+      "guideY": 1119.538203,
+      "description": "Down in Moldorc's moat"
+    },
+    {
+      "id": 79,
+      "number": 196,
+      "categoryId": 1,
+      "guideX": 756.0514,
+      "guideY": 1138.539958,
+      "description": "On the top beam of the wooden fence behind Moldorc's Castle. You can use the Handy Gnat to place a zipline anchor for an easy way up"
+    },
+    {
+      "id": 80,
+      "number": 77,
+      "categoryId": 2,
+      "guideX": 781.266273,
+      "guideY": 762.998997,
+      "description": "Inside the Pond Lab outpost, through the door requiring the Assistant Manager Keycard"
+    },
+    {
+      "id": 81,
+      "number": 78,
+      "categoryId": 2,
+      "guideX": 775.273576,
+      "guideY": 759.011526,
+      "description": "Inside the Pond Lab outpost, around the corner at the back"
+    },
+    {
+      "id": 82,
+      "number": 80,
+      "categoryId": 2,
+      "guideX": 772.43359,
+      "guideY": 721.797912,
+      "description": "At the bottom of the pond, inside the Wedding Ring"
+    },
+    {
+      "id": 83,
+      "number": 74,
+      "categoryId": 3,
+      "guideX": 772.355414,
+      "guideY": 717.733033,
+      "description": "Inside the Pond Lab. Behind the battery backup terminal"
+    },
+    {
+      "id": 84,
+      "number": 73,
+      "categoryId": 2,
+      "guideX": 769.038763,
+      "guideY": 705.511273,
+      "description": "Inside the Pond Lab. Underwater in the submerged lab section leading to the battery backup terminal. Trapped behind four clay chunks"
+    },
+    {
+      "id": 85,
+      "number": 72,
+      "categoryId": 2,
+      "guideX": 769.036161,
+      "guideY": 705.788205,
+      "description": "Inside the Pond Lab. Underwater in the submerged lab section leading to the battery backup terminal. Trapped behind four clay chunks"
+    },
+    {
+      "id": 86,
+      "number": 81,
+      "categoryId": 2,
+      "guideX": 751.03329,
+      "guideY": 696.029242,
+      "description": "At the bottom of the pond, underneath the Sunken Pot"
+    },
+    {
+      "id": 87,
+      "number": 86,
+      "categoryId": 2,
+      "guideX": 754.525103,
+      "guideY": 666.910024,
+      "description": "In the pond depths, in the large empty cavern behind the broken section of the Pond Lab"
+    },
+    {
+      "id": 88,
+      "number": 83,
+      "categoryId": 2,
+      "guideX": 746.027406,
+      "guideY": 673.662294,
+      "description": "Just under the large lily pad directly next to the corner of the Pond Skimmer"
+    },
+    {
+      "id": 89,
+      "number": 82,
+      "categoryId": 2,
+      "guideX": 760.649079,
+      "guideY": 676.786538,
+      "description": "At the bottom of the pond, underneath the leaf just outside the Sunken Pot"
+    },
+    {
+      "id": 90,
+      "number": 84,
+      "categoryId": 2,
+      "guideX": 775.276098,
+      "guideY": 637.839785,
+      "description": "At the bottom of the pond, inside the hollow log below the Pond Skimmer"
+    },
+    {
+      "id": 91,
+      "number": 75,
+      "categoryId": 3,
+      "guideX": 823.452784,
+      "guideY": 721.289158,
+      "description": "Inside the Pond Lab. Exit the main hatch room through the north door"
+    },
+    {
+      "id": 92,
+      "number": 70,
+      "categoryId": 3,
+      "guideX": 811.797262,
+      "guideY": 721.29832,
+      "description": "In the Pond Lab. Inside the main hatch room"
+    },
+    {
+      "id": 93,
+      "number": 71,
+      "categoryId": 2,
+      "guideX": 819.040804,
+      "guideY": 711.92817,
+      "description": "Inside the Pond Lab. Underwater in a flooded stairway. Exiting the main hatch room through the west door, take a right and swim down"
+    },
+    {
+      "id": 94,
+      "number": 76,
+      "categoryId": 3,
+      "guideX": 817.275088,
+      "guideY": 733.311429,
+      "description": "Inside the Pond Lab. In the big dome room"
+    },
+    {
+      "id": 95,
+      "number": 79,
+      "categoryId": 2,
+      "guideX": 811.619118,
+      "guideY": 737.558009,
+      "description": "Just under the large lily pad directly above the Pond Lab dome"
+    },
+    {
+      "id": 96,
+      "number": 112,
+      "categoryId": 1,
+      "guideX": 674.060724,
+      "guideY": 124.226309,
+      "description": "Up on the wooden fence. Building stairs from the Upper Yard to the plank is an easy way to get this molar"
+    },
+    {
+      "id": 97,
+      "number": 108,
+      "categoryId": 1,
+      "guideX": 609.115194,
+      "guideY": 285.663224,
+      "description": "On the supporting beam of the picnic table"
+    },
+    {
+      "id": 98,
+      "number": 109,
+      "categoryId": 1,
+      "guideX": 609.601776,
+      "guideY": 268.65729,
+      "description": "Inside the honey pot on the picnic table"
+    },
+    {
+      "id": 99,
+      "number": 111,
+      "categoryId": 1,
+      "guideX": 637.595521,
+      "guideY": 194.675211,
+      "description": "Inside the blue lid below the picnic table"
+    },
+    {
+      "id": 100,
+      "number": 110,
+      "categoryId": 1,
+      "guideX": 637.60189,
+      "guideY": 182.178238,
+      "description": "Inside the blue cup next to the cooler"
+    },
+    {
+      "id": 101,
+      "number": 6,
+      "categoryId": 1,
+      "guideX": 640.601207,
+      "guideY": 340.139975,
+      "description": "Under a leaf on the picnic table side of the wall"
+    },
+    {
+      "id": 102,
+      "number": 7,
+      "categoryId": 1,
+      "guideX": 616.107462,
+      "guideY": 335.160439,
+      "description": "Nestled in a crevice under a big rock"
+    },
+    {
+      "id": 103,
+      "number": 8,
+      "categoryId": 1,
+      "guideX": 668.076303,
+      "guideY": 396.647603,
+      "description": "In the mouth of the gnome"
+    },
+    {
+      "id": 104,
+      "number": 9,
+      "categoryId": 1,
+      "guideX": 711.554811,
+      "guideY": 460.138885,
+      "description": "Up on the rock wall near the Frankenline"
+    },
+    {
+      "id": 105,
+      "number": 11,
+      "categoryId": 3,
+      "guideX": 674.610305,
+      "guideY": 458.639249,
+      "description": "Inside a cave south of the Frankenline"
+    },
+    {
+      "id": 106,
+      "number": 10,
+      "categoryId": 3,
+      "guideX": 643.049466,
+      "guideY": 500.641549,
+      "description": "Inside the can"
+    },
+    {
+      "id": 107,
+      "number": 46,
+      "categoryId": 3,
+      "guideX": 599.611783,
+      "guideY": 503.637553,
+      "description": "In the Red Ant Hill. On the path to the queen, just before the room with the viewing window of the queen"
+    },
+    {
+      "id": 108,
+      "number": 45,
+      "categoryId": 3,
+      "guideX": 588.804015,
+      "guideY": 506.319624,
+      "description": "In the Red Ant Hill. Up on a ledge next to the small infestation, near the Rotten Bee Face Mask. On the path to the queen"
+    },
+    {
+      "id": 109,
+      "number": 47,
+      "categoryId": 3,
+      "guideX": 564.806005,
+      "guideY": 514.320472,
+      "description": "In the Red Ant Hill. Next to the hole the ants drop the food in. In the big cavernous room, take a left into the tunnel with the red grass"
+    },
+    {
+      "id": 110,
+      "number": 48,
+      "categoryId": 3,
+      "guideX": 554.303333,
+      "guideY": 516.312662,
+      "description": "In the Red Ant Hill. Dropping down into the food pit. In the big cavernous room, take a left into the tunnel with the red grass"
+    },
+    {
+      "id": 111,
+      "number": 44,
+      "categoryId": 3,
+      "guideX": 581.297192,
+      "guideY": 547.805033,
+      "description": "In the Red Ant Hill. Near the exit from killing the queen. Head straight down main entrance and it will be on the right"
+    },
+    {
+      "id": 112,
+      "number": 16,
+      "categoryId": 1,
+      "guideX": 629.382608,
+      "guideY": 573.901489,
+      "description": "Along the wood wall behind the plant pot"
+    },
+    {
+      "id": 113,
+      "number": 13,
+      "categoryId": 1,
+      "guideX": 638.233907,
+      "guideY": 595.816491,
+      "description": "Atop the flower"
+    },
+    {
+      "id": 114,
+      "number": 15,
+      "categoryId": 1,
+      "guideX": 658.030404,
+      "guideY": 604.299717,
+      "description": "Inside the pot"
+    },
+    {
+      "id": 115,
+      "number": 14,
+      "categoryId": 1,
+      "guideX": 664.39742,
+      "guideY": 617.024557,
+      "description": "Atop the pot rim"
+    },
+    {
+      "id": 116,
+      "number": 19,
+      "categoryId": 1,
+      "guideX": 583.100082,
+      "guideY": 627.982058,
+      "description": "Atop the cable box of the north laser"
+    },
+    {
+      "id": 117,
+      "number": 18,
+      "categoryId": 1,
+      "guideX": 599.341345,
+      "guideY": 618.801143,
+      "description": "Inside the orb weaver den"
+    },
+    {
+      "id": 118,
+      "number": 17,
+      "categoryId": 3,
+      "guideX": 582.731814,
+      "guideY": 603.602029,
+      "description": "In the ravine, near the north end that touches the wooden wall"
+    },
+    {
+      "id": 119,
+      "number": 20,
+      "categoryId": 3,
+      "guideX": 614.544382,
+      "guideY": 687.37389,
+      "description": "In the Old Anthill"
+    },
+    {
+      "id": 120,
+      "number": 87,
+      "categoryId": 2,
+      "guideX": 738.257996,
+      "guideY": 743.954591,
+      "description": "Inside the underwater cave heading towards the Oak Lab, near the pond entrance"
+    },
+    {
+      "id": 121,
+      "number": 88,
+      "categoryId": 2,
+      "guideX": 715.657194,
+      "guideY": 737.239303,
+      "description": "Inside the underwater cave heading towards the Oak Lab"
+    },
+    {
+      "id": 122,
+      "number": 89,
+      "categoryId": 2,
+      "guideX": 693.706489,
+      "guideY": 748.206907,
+      "description": "Inside the underwater cave heading towards the Oak Lab, in some tangled roots"
+    },
+    {
+      "id": 123,
+      "number": 23,
+      "categoryId": 1,
+      "guideX": 693.036853,
+      "guideY": 766.233763,
+      "description": "Near the web sacs among the roots"
+    },
+    {
+      "id": 124,
+      "number": 22,
+      "categoryId": 1,
+      "guideX": 678.544461,
+      "guideY": 778.958603,
+      "description": "Just outside the oak lab entrance"
+    },
+    {
+      "id": 125,
+      "number": 24,
+      "categoryId": 3,
+      "guideX": 673.395679,
+      "guideY": 763.874879,
+      "description": "Inside the Oak Lab"
+    },
+    {
+      "id": 126,
+      "number": 25,
+      "categoryId": 3,
+      "guideX": 669.775529,
+      "guideY": 750.913263,
+      "description": "Inside the Oak Lab, next to BURG.L"
+    },
+    {
+      "id": 127,
+      "number": 90,
+      "categoryId": 2,
+      "guideX": 665.526439,
+      "guideY": 736.909388,
+      "description": "Inside the underwater cave heading towards the Oak Lab, in the broken lab hallway"
+    },
+    {
+      "id": 128,
+      "number": 21,
+      "categoryId": 1,
+      "guideX": 660.296015,
+      "guideY": 769.367025,
+      "description": "Atop a mushroom on the south side of the oak tree"
+    },
+    {
+      "id": 129,
+      "number": 26,
+      "categoryId": 1,
+      "guideX": 619.534172,
+      "guideY": 924.77561,
+      "description": "Atop a leaf of the rose plant"
+    },
+    {
+      "id": 130,
+      "number": 27,
+      "categoryId": 3,
+      "guideX": 607.803617,
+      "guideY": 965.535478,
+      "description": "Inside the milk carton"
+    },
+    {
+      "id": 131,
+      "number": 192,
+      "categoryId": 1,
+      "guideX": 607.301059,
+      "guideY": 1051.027971,
+      "description": "On top of the plant growing out of the dried up waterfall"
+    },
+    {
+      "id": 132,
+      "number": 191,
+      "categoryId": 1,
+      "guideX": 580.972036,
+      "guideY": 1094.937369,
+      "description": "Atop the metal waterfall output"
+    },
+    {
+      "id": 133,
+      "number": 193,
+      "categoryId": 1,
+      "guideX": 570.051855,
+      "guideY": 1009.062117,
+      "description": "In a gap where the three stone walls meet"
+    },
+    {
+      "id": 134,
+      "number": 58,
+      "categoryId": 1,
+      "guideX": 535.288379,
+      "guideY": 1031.809756,
+      "description": "Up on a ledge of the rock wall"
+    },
+    {
+      "id": 135,
+      "number": 194,
+      "categoryId": 1,
+      "guideX": 538.550206,
+      "guideY": 1050.305276,
+      "description": "On top of a leaf near the upper rock wall"
+    },
+    {
+      "id": 136,
+      "number": 57,
+      "categoryId": 1,
+      "guideX": 512.306915,
+      "guideY": 1065.551583,
+      "description": "Next to the leaf along the base of the stone wall"
+    },
+    {
+      "id": 137,
+      "number": 59,
+      "categoryId": 3,
+      "guideX": 387.600576,
+      "guideY": 1074.512456,
+      "description": "In the Ant Totem cave"
+    },
+    {
+      "id": 138,
+      "number": 56,
+      "categoryId": 3,
+      "guideX": 404.533266,
+      "guideY": 1122.94302,
+      "description": "In the Hedge Lab, behind the blueberry test tube"
+    },
+    {
+      "id": 139,
+      "number": 60,
+      "categoryId": 3,
+      "guideX": 309.099421,
+      "guideY": 1096.786405,
+      "description": "Under the hedge, in a broken piece of the lab"
+    },
+    {
+      "id": 140,
+      "number": 61,
+      "categoryId": 1,
+      "guideX": 326.727638,
+      "guideY": 1132.842943,
+      "description": "Under the hedge, by an arched root just past the battery"
+    },
+    {
+      "id": 141,
+      "number": 55,
+      "categoryId": 1,
+      "guideX": 338.773461,
+      "guideY": 1126.480523,
+      "description": "On a branch outside the second Hedge outpost. Exit the outpost and loop around to go under the outpost"
+    },
+    {
+      "id": 142,
+      "number": 64,
+      "categoryId": 1,
+      "guideX": 340.129668,
+      "guideY": 1011.25003,
+      "description": "Atop the birdbath"
+    },
+    {
+      "id": 143,
+      "number": 29,
+      "categoryId": 1,
+      "guideX": 370.942317,
+      "guideY": 938.43233,
+      "description": "On top of the sprinkler"
+    },
+    {
+      "id": 144,
+      "number": 30,
+      "categoryId": 1,
+      "guideX": 419.728825,
+      "guideY": 875.161599,
+      "description": "Atop Rash's fist"
+    },
+    {
+      "id": 145,
+      "number": 28,
+      "categoryId": 1,
+      "guideX": 446.588992,
+      "guideY": 993.572703,
+      "description": "Nestled in the rock wall"
+    },
+    {
+      "id": 146,
+      "number": 63,
+      "categoryId": 1,
+      "guideX": 377.329275,
+      "guideY": 1011.246091,
+      "description": "Under a leaf near the birdbath"
+    },
+    {
+      "id": 147,
+      "number": 65,
+      "categoryId": 1,
+      "guideX": 373.528785,
+      "guideY": 1001.350963,
+      "description": "On the tip of the branch by the birdbath"
+    },
+    {
+      "id": 148,
+      "number": 54,
+      "categoryId": 1,
+      "guideX": 290.005688,
+      "guideY": 1009.480722,
+      "description": "On a branch above the zipline just outside the first Hedge outpost"
+    },
+    {
+      "id": 149,
+      "number": 62,
+      "categoryId": 1,
+      "guideX": 243.314126,
+      "guideY": 991.094319,
+      "description": "Under the hedge, leaning beside a rock"
+    },
+    {
+      "id": 150,
+      "number": 53,
+      "categoryId": 1,
+      "guideX": 253.920969,
+      "guideY": 999.931013,
+      "description": "Atop the first Hedge outpost"
+    },
+    {
+      "id": 151,
+      "number": 52,
+      "categoryId": 1,
+      "guideX": 276.125439,
+      "guideY": 947.879466,
+      "description": "On a branch above the end of first Hedge zipline. Climb the red wire to get up"
+    },
+    {
+      "id": 152,
+      "number": 50,
+      "categoryId": 1,
+      "guideX": 281.853054,
+      "guideY": 861.018179,
+      "description": "Further behind the Hedge field station"
+    },
+    {
+      "id": 153,
+      "number": 51,
+      "categoryId": 1,
+      "guideX": 246.105074,
+      "guideY": 881.149299,
+      "description": "On a branch in front of the Hedge field station"
+    },
+    {
+      "id": 154,
+      "number": 49,
+      "categoryId": 1,
+      "guideX": 238.606779,
+      "guideY": 786.672184,
+      "description": "Behind the cassette tape"
+    },
+    {
+      "id": 155,
+      "number": 114,
+      "categoryId": 1,
+      "guideX": 438.809853,
+      "guideY": 281.572855,
+      "description": "Outside the sandbox, underneath its claw"
+    },
+    {
+      "id": 156,
+      "number": 113,
+      "categoryId": 1,
+      "guideX": 408.768991,
+      "guideY": 329.948879,
+      "description": "Outside the sandbox at its base, near the pipe the leads to the Haze Lab"
+    },
+    {
+      "id": 157,
+      "number": 122,
+      "categoryId": 1,
+      "guideX": 283.605543,
+      "guideY": 177.955341,
+      "description": "On the ledge of the castle"
+    },
+    {
+      "id": 158,
+      "number": 121,
+      "categoryId": 1,
+      "guideX": 314.020542,
+      "guideY": 204.818891,
+      "description": "Inside the moat"
+    },
+    {
+      "id": 159,
+      "number": 118,
+      "categoryId": 3,
+      "guideX": 340.184458,
+      "guideY": 227.087361,
+      "description": "Inside the salt mines"
+    },
+    {
+      "id": 160,
+      "number": 116,
+      "categoryId": 3,
+      "guideX": 350.441125,
+      "guideY": 234.863652,
+      "description": "In the Sandbox Lab Outpost. Requires Asst Manager Keycard"
+    },
+    {
+      "id": 161,
+      "number": 115,
+      "categoryId": 1,
+      "guideX": 363.87543,
+      "guideY": 250.769701,
+      "description": "Near the yellow shovel"
+    },
+    {
+      "id": 162,
+      "number": 117,
+      "categoryId": 3,
+      "guideX": 362.818067,
+      "guideY": 263.141073,
+      "description": "Inside the antlion cave just southeast of the yellow shovel"
+    },
+    {
+      "id": 163,
+      "number": 119,
+      "categoryId": 3,
+      "guideX": 301.272116,
+      "guideY": 287.53249,
+      "description": "Underneath the overturned blue bucket"
+    },
+    {
+      "id": 164,
+      "number": 120,
+      "categoryId": 1,
+      "guideX": 243.645969,
+      "guideY": 274.096947,
+      "description": "Inside the aloe plant pot"
+    },
+    {
+      "id": 165,
+      "number": 123,
+      "categoryId": 1,
+      "guideX": 253.214103,
+      "guideY": 142.253469,
+      "description": "At the corner of the sandbox"
+    },
+    {
+      "id": 166,
+      "number": 124,
+      "categoryId": 1,
+      "guideX": 334.161587,
+      "guideY": 113.269112,
+      "description": "Between the sandbox and the wooden fence"
+    },
+    {
+      "id": 167,
+      "number": 125,
+      "categoryId": 1,
+      "guideX": 244.751337,
+      "guideY": 347.971711,
+      "description": "Inside the gutter"
+    },
+    {
+      "id": 168,
+      "number": 126,
+      "categoryId": 1,
+      "guideX": 187.46837,
+      "guideY": 345.855186,
+      "description": "In the middle of the coiled hose"
+    },
+    {
+      "id": 169,
+      "number": 137,
+      "categoryId": 3,
+      "guideX": 170.808663,
+      "guideY": 305.904851,
+      "description": "Inside the Black Anthill. Through the B door in the big soldier ant room"
+    },
+    {
+      "id": 170,
+      "number": 136,
+      "categoryId": 3,
+      "guideX": 139.513922,
+      "guideY": 323.536671,
+      "description": "Inside the Black Anthill. In the big soldier ant room on the path to the queen"
+    },
+    {
+      "id": 171,
+      "number": 134,
+      "categoryId": 3,
+      "guideX": 193.947675,
+      "guideY": 260.796613,
+      "description": "Inside the Black Anthill. On a ledge in the main lab cave"
+    },
+    {
+      "id": 172,
+      "number": 135,
+      "categoryId": 3,
+      "guideX": 170.259317,
+      "guideY": 247.883437,
+      "description": "Inside the Black Anthill. Right next to the B door exit of the lab"
+    },
+    {
+      "id": 173,
+      "number": 133,
+      "categoryId": 3,
+      "guideX": 164.616413,
+      "guideY": 209.001983,
+      "description": "Inside the Black Anthill. Follow the path down from the Trash Heap entrance"
+    },
+    {
+      "id": 174,
+      "number": 130,
+      "categoryId": 1,
+      "guideX": 130.488701,
+      "guideY": 221.018389,
+      "description": "On top of the Trashed AARTZ. You can climb up thorough a hole near the back of the fallen trash bin to parkour over"
+    },
+    {
+      "id": 175,
+      "number": 129,
+      "categoryId": 3,
+      "guideX": 101.147348,
+      "guideY": 210.942117,
+      "description": "In the back corner of the fallen trash bin"
+    },
+    {
+      "id": 176,
+      "number": 128,
+      "categoryId": 3,
+      "guideX": 117.94226,
+      "guideY": 189.734051,
+      "description": "In the middle of the fallen trash bin"
+    },
+    {
+      "id": 177,
+      "number": 131,
+      "categoryId": 1,
+      "guideX": 84.179841,
+      "guideY": 192.560038,
+      "description": "Against the fence behind the fallen trash bin"
+    },
+    {
+      "id": 178,
+      "number": 132,
+      "categoryId": 1,
+      "guideX": 106.065696,
+      "guideY": 120.208838,
+      "description": "Leaning against the upright trash bin"
+    },
+    {
+      "id": 179,
+      "number": 101,
+      "categoryId": 1,
+      "guideX": 369.484843,
+      "guideY": 416.197584,
+      "description": "On the far end of the ravine with the entrance to the Infected Broodmother Lair"
+    },
+    {
+      "id": 180,
+      "number": 102,
+      "categoryId": 1,
+      "guideX": 342.671393,
+      "guideY": 390.749702,
+      "description": "Between the cracks of the rock wall"
+    },
+    {
+      "id": 181,
+      "number": 99,
+      "categoryId": 1,
+      "guideX": 334.520126,
+      "guideY": 456.148432,
+      "description": "On the porch step, next the the sprayer for the Weed Killer 420 Canister"
+    },
+    {
+      "id": 182,
+      "number": 98,
+      "categoryId": 3,
+      "guideX": 318.980743,
+      "guideY": 446.99346,
+      "description": "Inside the final room of the Haze Lab with the Haze SUPER Chip"
+    },
+    {
+      "id": 183,
+      "number": 97,
+      "categoryId": 3,
+      "guideX": 341.956487,
+      "guideY": 480.572898,
+      "description": "Inside the Haze Lab Cavern, next to the human skeleton with the Defense Badge"
+    },
+    {
+      "id": 184,
+      "number": 95,
+      "categoryId": 3,
+      "guideX": 304.843512,
+      "guideY": 490.827916,
+      "description": "Under the porch, in the corner beneath some webs"
+    },
+    {
+      "id": 185,
+      "number": 96,
+      "categoryId": 3,
+      "guideX": 292.816988,
+      "guideY": 481.643319,
+      "description": "Under the porch, nestled in a small corner"
+    },
+    {
+      "id": 186,
+      "number": 100,
+      "categoryId": 1,
+      "guideX": 388.226067,
+      "guideY": 496.149796,
+      "description": "On top of the Weed Killer 420 Canister"
+    },
+    {
+      "id": 187,
+      "number": 94,
+      "categoryId": 1,
+      "guideX": 336.313141,
+      "guideY": 558.713591,
+      "description": "Inside the ravine"
+    },
+    {
+      "id": 188,
+      "number": 93,
+      "categoryId": 3,
+      "guideX": 301.641188,
+      "guideY": 563.317919,
+      "description": "Under the porch clustered with some rocks in the corner"
+    },
+    {
+      "id": 189,
+      "number": 92,
+      "categoryId": 3,
+      "guideX": 311.4811,
+      "guideY": 599.630232,
+      "description": "Under the porch near the gum"
+    },
+    {
+      "id": 190,
+      "number": 91,
+      "categoryId": 3,
+      "guideX": 310.846201,
+      "guideY": 636.485748,
+      "description": "Under the porch in a corner"
+    },
+    {
+      "id": 191,
+      "number": 41,
+      "categoryId": 3,
+      "guideX": 308.800376,
+      "guideY": 668.560603,
+      "description": "Under the porch in a corner"
+    },
+    {
+      "id": 192,
+      "number": 42,
+      "categoryId": 1,
+      "guideX": 304.052025,
+      "guideY": 701.549887,
+      "description": "On the porch behind the paint cans"
+    },
+    {
+      "id": 193,
+      "number": 39,
+      "categoryId": 1,
+      "guideX": 381.784342,
+      "guideY": 723.044681,
+      "description": "On the tip of the branch"
+    },
+    {
+      "id": 194,
+      "number": 107,
+      "categoryId": 3,
+      "guideX": 403.296055,
+      "guideY": 561.333852,
+      "description": "Inside Dan Hamster III's cave"
+    },
+    {
+      "id": 195,
+      "number": 105,
+      "categoryId": 1,
+      "guideX": 416.297988,
+      "guideY": 557.834699,
+      "description": "On top of the rake"
+    },
+    {
+      "id": 196,
+      "number": 103,
+      "categoryId": 1,
+      "guideX": 429.048045,
+      "guideY": 489.851167,
+      "description": "Under the leaf in the ravine near the haze field station"
+    },
+    {
+      "id": 197,
+      "number": 104,
+      "categoryId": 1,
+      "guideX": 463.293155,
+      "guideY": 521.340633,
+      "description": "In the hole in the ground just northeast of the Haze Field Station"
+    },
+    {
+      "id": 198,
+      "number": 5,
+      "categoryId": 1,
+      "guideX": 527.036446,
+      "guideY": 421.864729,
+      "description": "Near the cassette tape"
+    },
+    {
+      "id": 199,
+      "number": 3,
+      "categoryId": 1,
+      "guideX": 544.022629,
+      "guideY": 630.553459,
+      "description": "Under the Candy Dispenser"
+    },
+    {
+      "id": 200,
+      "number": 2,
+      "categoryId": 3,
+      "guideX": 517.306972,
+      "guideY": 660.304973,
+      "description": "Inside the SPAC.R"
+    },
+    {
+      "id": 201,
+      "number": 4,
+      "categoryId": 1,
+      "guideX": 455.571016,
+      "guideY": 620.31466,
+      "description": "Atop the cable box of the south laser"
+    },
+    {
+      "id": 202,
+      "number": 1,
+      "categoryId": 3,
+      "guideX": 460.799751,
+      "guideY": 582.069382,
+      "description": "Right outside the kid case"
+    },
+    {
+      "id": 203,
+      "number": 106,
+      "categoryId": 1,
+      "guideX": 425.558962,
+      "guideY": 585.068656,
+      "description": "In the ravine near the rake"
+    },
+    {
+      "id": 204,
+      "number": 40,
+      "categoryId": 1,
+      "guideX": 426.300774,
+      "guideY": 694.546739,
+      "description": "In the little ravine under a leaf"
+    },
+    {
+      "id": 205,
+      "number": 31,
+      "categoryId": 3,
+      "guideX": 445.33286,
+      "guideY": 787.924426,
+      "description": "Next to the 4 Leaf Clover"
+    },
+    {
+      "id": 206,
+      "number": 32,
+      "categoryId": 3,
+      "guideX": 464.42406,
+      "guideY": 757.537628,
+      "description": "Inside the can"
+    },
+    {
+      "id": 207,
+      "number": 35,
+      "categoryId": 1,
+      "guideX": 517.802822,
+      "guideY": 742.515248,
+      "description": "Atop the cable box of the east laser"
+    },
+    {
+      "id": 208,
+      "number": 34,
+      "categoryId": 1,
+      "guideX": 519.405592,
+      "guideY": 734.562223,
+      "description": "On the middle section of the eastern laser"
+    },
+    {
+      "id": 209,
+      "number": 33,
+      "categoryId": 1,
+      "guideX": 512.689968,
+      "guideY": 726.078996,
+      "description": "Near the leg of the eastern laser"
+    },
+    {
+      "id": 210,
+      "number": 36,
+      "categoryId": 3,
+      "guideX": 553.516097,
+      "guideY": 778.215493,
+      "description": "In the corner of the Larva Cave square room"
+    },
+    {
+      "id": 211,
+      "number": 38,
+      "categoryId": 1,
+      "guideX": 571.550978,
+      "guideY": 792.354203,
+      "description": "Atop the Lemon Crime Punch-O"
+    },
+    {
+      "id": 212,
+      "number": 37,
+      "categoryId": 3,
+      "guideX": 560.145129,
+      "guideY": 806.869455,
+      "description": "Next to the Larva Cave field station"
+    },
+    {
+      "id": 213,
+      "number": 168,
+      "categoryId": 1,
+      "guideX": 1186.877044,
+      "guideY": 647.061612,
+      "description": "On top of the sharpener atop the JavaMatic"
+    },
+    {
+      "id": 214,
+      "number": 216,
+      "categoryId": 3,
+      "guideX": 1190.838982,
+      "guideY": 782.470505,
+      "description": "In the Brawny Bin, atop the large Tazy.T"
+    },
+    {
+      "id": 215,
+      "number": 217,
+      "categoryId": 3,
+      "guideX": 1195.435015,
+      "guideY": 767.63539,
+      "description": "In the Brawny Bin, underneath a floppy disk beneath the Tazy.T"
+    },
+    {
+      "id": 216,
+      "number": 218,
+      "categoryId": 3,
+      "guideX": 1173.796051,
+      "guideY": 726.905857,
+      "description": "In the Brawny Bin, between the game box and the cardboard box"
+    },
+    {
+      "id": 217,
+      "number": 219,
+      "categoryId": 3,
+      "guideX": 1150.544992,
+      "guideY": 726.633129,
+      "description": "In the Brawny Bin, inside the blue waffle ball by the field station"
+    },
+    {
+      "id": 218,
+      "number": 85,
+      "categoryId": 1,
+      "guideX": 723.269052,
+      "guideY": 527.224735,
+      "description": "On top of the lily pad with a flower"
+    },
+    {
+      "id": 219,
+      "number": 127,
+      "categoryId": 1,
+      "guideX": 99.25,
+      "guideY": 355.25,
+      "description": "On top of the tap the hose connects to"
+    }
+  ]
+}

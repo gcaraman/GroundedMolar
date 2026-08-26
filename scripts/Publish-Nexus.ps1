@@ -46,12 +46,6 @@ foreach ($relativePath in $requiredFiles) {
     }
 }
 
-foreach ($forbiddenPath in @('GroundedMolar.Preview.exe', 'GroundedMolar.Preview.dll')) {
-    if (Test-Path -LiteralPath (Join-Path $publishRoot $forbiddenPath)) {
-        throw "Release contains excluded developer tooling: $forbiddenPath"
-    }
-}
-
 $oozHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $publishRoot 'ooz.exe')).Hash
 if ($oozHash -ne '271D3FD02E582175FF033D0A23DCA3785B6888FA21B8CD06741BA8C19B71DF41') {
     throw "Bundled ooz.exe failed integrity validation: $oozHash"

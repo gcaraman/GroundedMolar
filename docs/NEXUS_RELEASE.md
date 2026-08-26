@@ -67,8 +67,7 @@ Use the Nexus permission controls consistently with `LICENSE.txt` and `THIRD_PAR
 9. Use only screenshots taken from this app or Grounded that you are entitled to publish; do not use Obsidian or Xbox logos as branding.
 10. Re-check the current Nexus File Submission Guidelines, Nexus Terms, Obsidian IP Usage Guidelines, and any Grounded/Xbox terms applicable to the uploader.
 11. Confirm the scheduled `Runtime security advisory check` is passing. Before upload, also run `scripts/Test-RuntimeAdvisories.ps1`; update both the runtime pin and the minimum publish gate when Microsoft ships a newer required security floor.
-12. Confirm `GroundedMolar.Preview.exe`/`.dll` are absent; the packaging script enforces this because Preview is developer-only and does not share the end-user screenshot validation boundary.
-13. Code-sign the app/helper/archive when a project signing identity is available. Until then, state explicitly that the binaries are unsigned, preserve the pinned helper hash/provenance disclosure, and complete SmartScreen plus exact-ZIP malware scanning rather than implying authenticity.
+12. Code-sign the app/helper/archive when a project signing identity is available. Until then, state explicitly that the binaries are unsigned, preserve the pinned helper hash/provenance disclosure, and complete SmartScreen plus exact-ZIP malware scanning rather than implying authenticity.
 
 ## Compliance assessment
 

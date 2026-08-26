@@ -15,3 +15,7 @@ The decoder warns that it is not fuzz-safe. GroundedMolar therefore validates st
 ## Grounded visual material
 
 The map and Milk Molar marker in the app are Grounded-derived fan-project material. Grounded and related marks and assets belong to their respective owners. They are included only for this free, unofficial Grounded companion utility and are not licensed for reuse outside that context.
+
+## Grounded Wiki NG+ Milk Molar guide text
+
+The optional popup hints in `src/GroundedMolar.App/Data/milk-molar-guide.json` are adapted from the 219-marker community interactive map at <https://grounded.fandom.com/wiki/Map:Ng_plus_molar>, accessed 24 August 2026. The source page credits its contributors through the Grounded Wiki revision history and publishes community content under Creative Commons Attribution-ShareAlike. GroundedMolar bundles only marker numbers, categories, guide coordinates, and short location descriptions; it does not bundle the guide's screenshots. Exact repeated descriptions are retained when the source assigns the same prose to distinct marker coordinates. The hints are labeled as approximate community guide text and remain separate from authoritative save-derived spawn identity and collection state.

@@ -3,7 +3,6 @@
     <Project Path="src/GroundedMolar.Cli/GroundedMolar.Cli.csproj" />
     <Project Path="src/GroundedMolar.Core/GroundedMolar.Core.csproj" />
     <Project Path="src/GroundedMolar.App/GroundedMolar.App.csproj" />
-    <Project Path="src/GroundedMolar.Preview/GroundedMolar.Preview.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/GroundedMolar.Tests/GroundedMolar.Tests.csproj" />
