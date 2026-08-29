@@ -34,8 +34,6 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
     public ParsedSaveFormat Parse(ReadOnlySpan<byte> bytes, CancellationToken cancellationToken)
     {
         var spawns = ReadMolarSpawns(bytes);
-        if (spawns.Count == 0 || !spawns.Any(x => !x.IsUnderwater) || !spawns.Any(x => x.IsUnderwater))
-            throw new InvalidDataException("Both selected molar groups are required.");
         if (spawns.Select(x => x.SpawnGuid).Distinct().Count() != spawns.Count || spawns.Select(x => x.ActorGuid).Distinct().Count() != spawns.Count)
             throw new InvalidDataException("Selected spawn and actor GUIDs must be unique.");
         return new(spawns, ReadActors(bytes, spawns, cancellationToken));
@@ -83,10 +81,13 @@ public sealed class GroundedSaveFormatProfileV1(Action? actorLookupPassCompleted
         var markerPositions = FindAll(bytes, marker).ToArray();
         if (markerPositions.Length != 1) throw new InvalidDataException($"Expected one {groupName} group record, found {markerPositions.Length}.");
         var cursor = markerPositions[0] + marker.Length;
-        EnsureAvailable(bytes, cursor, 8);
+        EnsureAvailable(bytes, cursor, 4);
         var count = BinaryPrimitives.ReadInt32LittleEndian(bytes[cursor..]); cursor += 4;
+        if (count == 0) return [];
+        EnsureAvailable(bytes, cursor, 4);
         var reserved = BinaryPrimitives.ReadInt32LittleEndian(bytes[cursor..]); cursor += 4;
-        if (count is < 1 or > 512 || reserved != 0) throw new InvalidDataException($"Invalid {groupName} entry header.");
+        if (count is < 0 or > 512 || reserved != 0)
+            throw new InvalidDataException($"Invalid {groupName} entry header (count={count}, reserved={reserved}).");
 
         var result = new List<MolarSpawn>(count);
         for (var index = 0; index < count; index++)

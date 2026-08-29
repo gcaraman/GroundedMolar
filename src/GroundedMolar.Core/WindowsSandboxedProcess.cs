@@ -41,14 +41,14 @@ internal static class WindowsSandboxedProcess
                 throw new ArgumentException("The writable sandbox output must be a pre-created file inside the working directory.", nameof(writableOutputPath));
         }
 
-        var profileName = $"GroundedMolar.Decoder.{Guid.NewGuid():N}";
+        var profileName = $"MolarMap.Decoder.{Guid.NewGuid():N}";
         var profileCreated = false;
         IntPtr sid = IntPtr.Zero, attributes = IntPtr.Zero, capabilitiesBuffer = IntPtr.Zero, handleBuffer = IntPtr.Zero, environment = IntPtr.Zero, job = IntPtr.Zero;
         IntPtr stdoutRead = IntPtr.Zero, stdoutWrite = IntPtr.Zero, stderrRead = IntPtr.Zero, stderrWrite = IntPtr.Zero, stdin = IntPtr.Zero;
         ProcessInformation process = default;
         try
         {
-            var profileResult = CreateAppContainerProfile(profileName, "GroundedMolar decoder", "Ephemeral decoder sandbox", IntPtr.Zero, 0, out sid);
+            var profileResult = CreateAppContainerProfile(profileName, "MolarMap decoder", "Ephemeral decoder sandbox", IntPtr.Zero, 0, out sid);
             if (profileResult == 0) profileCreated = true;
             else
             {

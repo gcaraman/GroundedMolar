@@ -105,7 +105,7 @@ public static class MolarHintCatalog
 
     private static double SquaredDistanceOnOrientedMap(MolarHint entry, double mapX, double mapY)
     {
-        // The community guide uses the unrotated source texture. GroundedMolar's proven map
+        // The community guide uses the unrotated source texture. MolarMap's proven map
         // reconstruction rotates exported UI layers 90 degrees counter-clockwise.
         var orientedGuideX = entry.GuideY;
         var orientedGuideY = GuideMapSize - entry.GuideX;

@@ -58,4 +58,4 @@ catch (Exception exception) when (exception is IOException or UnauthorizedAccess
 }
 
 static void PrintUsage() => Console.Error.WriteLine(
-    "Usage: GroundedMolar.Cli <World.csav|decompressed.bin> [--ooz <path-to-ooz.exe>] [--decoded-output <path>]");
+    "Usage: MolarMap.Cli <World.csav|decompressed.bin> [--ooz <path-to-ooz.exe>] [--decoded-output <path>]");

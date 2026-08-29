@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $headers = @{
     Accept = 'application/vnd.github+json'
     'X-GitHub-Api-Version' = '2022-11-28'
-    'User-Agent' = 'GroundedMolar-runtime-advisory-check'
+    'User-Agent' = 'MolarMap-runtime-advisory-check'
 }
 $query = [Uri]::EscapeDataString("$RuntimePackage@$RuntimeVersion")
 $uri = "https://api.github.com/advisories?ecosystem=nuget&affects=$query&per_page=100"

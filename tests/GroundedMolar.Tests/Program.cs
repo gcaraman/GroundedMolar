@@ -10,7 +10,7 @@ var failures = new List<string>();
 var checks = 0;
 Run("latest-save discovery preserves timestamp and path ordering", () =>
 {
-    var root = Path.Combine(Path.GetTempPath(), $"GroundedMolar-discovery-{Guid.NewGuid():N}");
+    var root = Path.Combine(Path.GetTempPath(), $"MolarMap-discovery-{Guid.NewGuid():N}");
     try
     {
         var alpha = Path.Combine(root, "alpha", "World.csav");
@@ -35,7 +35,7 @@ Run("latest-save discovery preserves timestamp and path ordering", () =>
 });
 Run("latest-save discovery honors cancellation", () =>
 {
-    var root = Path.Combine(Path.GetTempPath(), $"GroundedMolar-discovery-{Guid.NewGuid():N}");
+    var root = Path.Combine(Path.GetTempPath(), $"MolarMap-discovery-{Guid.NewGuid():N}");
     Directory.CreateDirectory(root);
     try
     {
@@ -61,6 +61,28 @@ Run("settings equality detects only actual persisted changes", () =>
         "A selected-save change must be persisted.");
     True(AppSettingsStore.HasChanged(saved, saved with { ShowGuideHints = true }),
         "A preference change must be persisted.");
+});
+Run("legacy settings migrate to MolarMap without overwriting current settings", () =>
+{
+    var root = Path.Combine(Path.GetTempPath(), $"MolarMap-settings-{Guid.NewGuid():N}");
+    try
+    {
+        var current = Path.Combine(root, "MolarMap", "settings.json");
+        var legacy = Path.Combine(root, "GroundedMolar", "settings.json");
+        var legacySettings = new AppSettings("legacy-save", "legacy-folder", true, .55, true);
+        AppSettingsStore.Save(legacySettings, legacy);
+
+        True(AppSettingsStore.Load(current, legacy) == legacySettings, "Legacy settings were not loaded.");
+        True(File.Exists(current), "Legacy settings were not migrated to the MolarMap directory.");
+
+        var currentSettings = legacySettings with { SavePath = "current-save" };
+        AppSettingsStore.Save(currentSettings, current);
+        True(AppSettingsStore.Load(current, legacy) == currentSettings, "Current settings must take precedence after migration.");
+    }
+    finally
+    {
+        if (Directory.Exists(root)) Directory.Delete(root, true);
+    }
 });
 Run("map zoom is bounded by fit and 16x", () =>
 {
@@ -193,11 +215,24 @@ Run("v1 actor lookup preserves recognized and absent persistent states in one pa
     True(analysis.Uncollected.Count == 1 && analysis.Uncollected.Single().ApproachState == MolarApproachState.Approached, "Recognized state 1 changed.");
     True(analysis.Collected.Count == 1, "An actor with only its selected-spawn reference was not collected.");
 });
+Run("v1 accepts independently or jointly empty selected molar groups", () =>
+{
+    foreach (var (normal, underwater) in new[] { (false, true), (true, false), (false, false) })
+    {
+        var bytes = BuildSyntheticMolarSave(false, 0, false, normal, underwater);
+        var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
+        True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Empty selected group was not validated.");
+        True(analysis.Selected.Count == (normal ? 1 : 0) + (underwater ? 1 : 0), "Empty selected-group count was not preserved.");
+        True(analysis.Uncollected.Count == 0, "An empty or actor-absent synthetic group unexpectedly produced an uncollected marker.");
+    }
+});
 Run("v1 actor lookup rejects unrecognized persistent-state signatures", () =>
 {
     var bytes = BuildSyntheticMolarSave(includeNormalState: true, normalState: 2, includeUnderwaterState: false);
     var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(bytes);
     True(analysis.Confidence == SaveConfidence.Unsupported && analysis.Selected.Count == 0, "An unrecognized second actor record did not fail closed.");
+    True(analysis.Diagnostic?.Contains("unrecognized persistent-state record", StringComparison.Ordinal) == true,
+        $"The fail-closed diagnostic lost the profile rejection reason: {analysis.Diagnostic}");
 });
 Run("v1 actor lookup rejects unsupported occurrence counts", () =>
 {
@@ -281,9 +316,13 @@ Run("pass-through decoded saves enforce the decoded quota", () => WithRawFile(ne
     Throws<InvalidDataException>(() => new PassThroughSaveDecoder(maximumBytes: 16).Decode(path))));
 Run("mismatched compressed size is rejected", () => WithRawFile(BuildContainer(3, 5, [1, 2]), path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([])).Decode(path))));
 Run("mismatched decoded size is rejected", () => WithCsav([1, 2, 3], [4], path => Throws<InvalidDataException>(() => new GroundedCsavDecoder(new FakeKrakenDecoder([1, 2])).Decode(path))));
+Run("default builds compile the reviewed ooz hash into the decoder", () =>
+    True(OozKrakenDecoder.ConfiguredPinnedSha256 ==
+        (Environment.GetEnvironmentVariable("GROUNDED_EXPECTED_OOZ_PIN") ?? OozKrakenDecoder.PinnedSha256),
+        "The build-time ooz hash did not match the expected release artifact."));
 Run("ooz execution uses the hash-verified byte snapshot", () => WithTemporaryDirectory(directory =>
 {
-    var source = FindAncestorFile("ooz.exe");
+    var source = FindOozFile();
     var copy = Path.Combine(directory, "ooz.exe");
     File.Copy(source, copy);
     var decoder = new OozKrakenDecoder(copy);
@@ -294,7 +333,7 @@ Run("ooz execution uses the hash-verified byte snapshot", () => WithTemporaryDir
 }));
 Run("malformed Kraken corpus stays inside the production sandbox", () =>
 {
-    var decoder = new OozKrakenDecoder(FindAncestorFile("ooz.exe"), timeout: TimeSpan.FromSeconds(5));
+    var decoder = new OozKrakenDecoder(FindOozFile(), timeout: TimeSpan.FromSeconds(5));
     foreach (var payload in new[]
     {
         new byte[] { 0 },
@@ -324,7 +363,7 @@ if (OperatingSystem.IsWindows())
     Run("production sandbox confines filesystem and denies network", () => WithTemporaryDirectory(directory =>
     {
         var command = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe");
-        var outside = Path.Combine(Path.GetTempPath(), $"GroundedMolar-escape-{Guid.NewGuid():N}.txt");
+        var outside = Path.Combine(Path.GetTempPath(), $"MolarMap-escape-{Guid.NewGuid():N}.txt");
         try
         {
             _ = WindowsSandboxedProcess.Run(command, ["/d", "/c", $"echo inside>inside.txt & echo escaped>\"{outside}\""], directory,
@@ -400,7 +439,7 @@ if (!string.IsNullOrWhiteSpace(fixtureDirectory))
         var csav = Path.Combine(fixtureDirectory, "World.csav");
         var expectedPath = Path.Combine(fixtureDirectory, "World_decompressed.bin");
         var ooz = Environment.GetEnvironmentVariable("GROUNDED_OOZ_PATH") ?? FindAncestorFile("ooz.exe");
-        var tempRoot = Path.Combine(Path.GetTempPath(), "GroundedMolar");
+        var tempRoot = Path.Combine(Path.GetTempPath(), "MolarMap");
         var before = Directory.Exists(tempRoot) ? Directory.GetDirectories(tempRoot).ToHashSet(StringComparer.OrdinalIgnoreCase) : [];
         var actual = new GroundedCsavDecoder(new OozKrakenDecoder(ooz)).Decode(csav);
         var expected = File.ReadAllBytes(expectedPath);
@@ -495,7 +534,7 @@ static void ThrowsFileAccessDenied(Action action)
 }
 static void WithTemporaryDirectory(Action<string> action)
 {
-    var path = Path.Combine(Path.GetTempPath(), "GroundedMolar.Tests", Guid.NewGuid().ToString("N"));
+    var path = Path.Combine(Path.GetTempPath(), "MolarMap.Tests", Guid.NewGuid().ToString("N"));
     Directory.CreateDirectory(path);
     try { action(path); }
     finally { Directory.Delete(path, recursive: true); }
@@ -560,21 +599,23 @@ static byte[] BuildPartyDiscoveryRecord(params string[] rows)
     return record.ToArray();
 }
 static void WriteFString(Stream stream, string value) { var bytes = System.Text.Encoding.ASCII.GetBytes(value); stream.Write(BitConverter.GetBytes(bytes.Length + 1)); stream.Write(bytes); stream.WriteByte(0); }
-static byte[] BuildSyntheticMolarSave(bool includeNormalState, byte normalState, bool includeUnderwaterState)
+static byte[] BuildSyntheticMolarSave(bool includeNormalState, byte normalState, bool includeUnderwaterState, bool includeNormalSpawn = true, bool includeUnderwaterSpawn = true)
 {
     var normalActor = new UnrealGuid(5, 6, 7, 8);
     var underwaterActor = new UnrealGuid(13, 14, 15, 16);
     using var stream = new MemoryStream();
-    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_NG+.SD_MilkMolar_NG+_C", new UnrealGuid(1, 2, 3, 4), normalActor);
-    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_Underwater_NG+.SD_MilkMolar_Underwater_NG+_C", new UnrealGuid(9, 10, 11, 12), underwaterActor);
-    if (includeNormalState) WriteActorState(stream, normalActor, normalState);
-    if (includeUnderwaterState) WriteActorState(stream, underwaterActor, 0);
+    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolars.SG_NG+_MilkMolars_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_NG+.SD_MilkMolar_NG+_C", new UnrealGuid(1, 2, 3, 4), normalActor, includeNormalSpawn);
+    WriteMolarGroup(stream, "/Game/Blueprints/Items/SpawnPoints/SpawnGroups/SG_NG+_MilkMolarsUnderwater.SG_NG+_MilkMolarsUnderwater_C", "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_Underwater_NG+.SD_MilkMolar_Underwater_NG+_C", new UnrealGuid(9, 10, 11, 12), underwaterActor, includeUnderwaterSpawn);
+    if (includeNormalSpawn && includeNormalState) WriteActorState(stream, normalActor, normalState);
+    if (includeUnderwaterSpawn && includeUnderwaterState) WriteActorState(stream, underwaterActor, 0);
     return stream.ToArray();
 }
-static void WriteMolarGroup(Stream stream, string groupAsset, string spawnData, UnrealGuid spawnGuid, UnrealGuid actorGuid)
+static void WriteMolarGroup(Stream stream, string groupAsset, string spawnData, UnrealGuid spawnGuid, UnrealGuid actorGuid, bool includeSpawn = true)
 {
     var marker = System.Text.Encoding.ASCII.GetBytes(groupAsset + "\0");
-    stream.Write(marker); stream.Write(BitConverter.GetBytes(1)); stream.Write(new byte[4]); WriteFString(stream, spawnData);
+    stream.Write(marker); stream.Write(BitConverter.GetBytes(includeSpawn ? 1 : 0));
+    if (!includeSpawn) return;
+    stream.Write(new byte[4]); WriteFString(stream, spawnData);
     var record = new byte[85];
     BitConverter.GetBytes(1f).CopyTo(record, 12); BitConverter.GetBytes(10f).CopyTo(record, 16); BitConverter.GetBytes(20f).CopyTo(record, 20); BitConverter.GetBytes(30f).CopyTo(record, 24);
     BitConverter.GetBytes(1f).CopyTo(record, 28); BitConverter.GetBytes(1f).CopyTo(record, 32); BitConverter.GetBytes(1f).CopyTo(record, 36);
@@ -587,7 +628,8 @@ static void WriteActorState(Stream stream, UnrealGuid actorGuid, byte state)
     stream.Write(actorGuid.ToSerializedBytes()); stream.Write(new byte[] { state, 0, 4, 0, 0, 0, 0, 0 });
 }
 static void WithCsav(byte[] decoded, byte[] payload, Action<string> action) => WithRawFile(BuildContainer(decoded.Length, payload.Length, payload), action);
-static void WithRawFile(byte[] bytes, Action<string> action) { var path = Path.Combine(Path.GetTempPath(), $"GroundedMolar-test-{Guid.NewGuid():N}.csav"); try { File.WriteAllBytes(path, bytes); action(path); } finally { File.Delete(path); } }
+static void WithRawFile(byte[] bytes, Action<string> action) { var path = Path.Combine(Path.GetTempPath(), $"MolarMap-test-{Guid.NewGuid():N}.csav"); try { File.WriteAllBytes(path, bytes); action(path); } finally { File.Delete(path); } }
+static string FindOozFile() => Environment.GetEnvironmentVariable("GROUNDED_OOZ_PATH") ?? FindAncestorFile("ooz.exe");
 static string FindAncestorFile(string name) { for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent) { var path = Path.Combine(directory.FullName, name); if (File.Exists(path)) return path; } throw new FileNotFoundException($"Could not locate {name}."); }
 static MolarSpawn SpawnAtGuidePoint(double guideX, double guideY, bool underwater)
 {

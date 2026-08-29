@@ -5,22 +5,29 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ApplicationTitle>GroundedMolar</ApplicationTitle>
-    <AssemblyName>GroundedMolar</AssemblyName>
-    <Product>GroundedMolar</Product>
+    <ApplicationTitle>MolarMap</ApplicationTitle>
+    <ApplicationIcon>Assets\MolarMap.ico</ApplicationIcon>
+    <AssemblyName>MolarMap</AssemblyName>
+    <Product>MolarMap</Product>
     <Description>Offline viewer for authoritative uncollected NG+ Milk Molar locations in Grounded saves.</Description>
-    <Authors>GroundedMolar contributors</Authors>
-    <Version>1.0.0</Version>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <Authors>MolarMap contributors</Authors>
+    <Version>1.0.1</Version>
+    <ApplicationVersion>1.0.1.0</ApplicationVersion>
+    <Company>MolarMap contributors</Company>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <!-- Release security floor. Keep this synchronized with scripts/Test-PublishedRuntime.ps1. -->
     <RuntimeFrameworkVersion>10.0.11</RuntimeFrameworkVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Release packaging supplies a signed copy and compiles its exact hash into GroundedMolar.Core. -->
+    <OozSourcePath Condition="'$(OozSourcePath)' == ''">..\..\ooz.exe</OozSourcePath>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\GroundedMolar.Core\GroundedMolar.Core.csproj" />
-    <Content Include="..\..\ooz.exe" Link="ooz.exe" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="$(OozSourcePath)" Link="ooz.exe" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <Content Include="Assets\T_UI_MM_MorselGeneric.png" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="Assets\MolarMap.ico" />
     <Content Include="Data\milk-molar-guide.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\grounded-marker-free-map.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>

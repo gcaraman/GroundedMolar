@@ -35,4 +35,4 @@ Current validation gate: compare either projection against one visible in-game m
 - Validate behavior while Grounded rewrites `World.csav` during play.
 - Add automatic Steam/Xbox save discovery.
 - Security remediation is implemented in source for the 2026-08-24 audit: patched WPF runtime gating, AppContainer/Job isolation for `ooz`, bounded save processing, and bounded asynchronous screenshot validation. Complete the unavailable private-fixture, clean-machine, signing, malware-scan, and public-upload checks before declaring a release.
-- Self-contained Windows x64 packaging is implemented; complete every manual Nexus upload check in `docs/NEXUS_RELEASE.md` before publishing.
+- Version 1.0.1 has an identity-validated x64 MSIX pipeline for Microsoft Store and a fail-closed signed x64 MSI/ZIP pipeline for Nexus/direct download. Keep both channels on the same source revision, product version, and release notes; never distribute the unsigned pre-certification MSIX through Nexus. Complete the Store submission, Nexus signing, clean-machine, screenshot, and malware-scan gates in `docs/RELEASE_1.0.1.md` before each channel is published.

@@ -1,8 +1,8 @@
-# GroundedMolar
+# MolarMap
 
 Offline Windows tooling for locating uncollected, randomized Milk Molars selected in a Grounded New Game+ world.
 
-GroundedMolar is a free, unofficial fan project. It isn't endorsed by Obsidian Entertainment, Inc. and doesn't reflect the views or opinions of Obsidian Entertainment, Inc. or anyone officially involved with making Grounded. Grounded, Obsidian Entertainment, and their related marks belong to their respective owners.
+MolarMap is a free, unofficial fan project. It isn't endorsed by Obsidian Entertainment, Inc. and doesn't reflect the views or opinions of Obsidian Entertainment, Inc. or anyone officially involved with making Grounded. Grounded, Obsidian Entertainment, and their related marks belong to their respective owners.
 
 This Phase 1 foundation contains domain models, decoder/profile seams, fail-closed analysis, a CLI, and verified projection. Unknown input returns `Unsupported` rather than guessed results.
 
@@ -30,7 +30,9 @@ The project targets .NET 10 and pins SDK 10.0.303 plus Windows Desktop Runtime 1
 
 ## Public Windows release
 
-Run `powershell -ExecutionPolicy Bypass -File scripts/Publish-Nexus.ps1` to build and verify a self-contained Windows x64 ZIP under `artifacts/nexus`. End users extract the ZIP and run `GroundedMolar.exe`; no .NET installation, mod manager, game-file modification, account, or network connection is required. See [docs/NEXUS_RELEASE.md](docs/NEXUS_RELEASE.md) for the prepared Nexus description, permissions, upload checklist, and known limitations.
+Version 1.0.1 uses a Store-signed x64 MSIX for Microsoft Store and a separately signed offline x64 MSI inside the Nexus/direct-download ZIP. Both channels must be built from the same source revision with the same product version and user-visible release notes, but the unsigned pre-certification MSIX must never be distributed through Nexus. Run `scripts/Publish-StoreMsix.ps1` for the Store submission package and `scripts/Publish-Release.ps1` with a publicly trusted signing identity for the Nexus/direct release. Running the latter without signing parameters creates only clearly labeled `UNSIGNED-DO-NOT-PUBLISH` rehearsal artifacts. See [docs/RELEASE_1.0.1.md](docs/RELEASE_1.0.1.md), [docs/NEXUS_RELEASE.md](docs/NEXUS_RELEASE.md), and [docs/MICROSOFT_STORE_RELEASE.md](docs/MICROSOFT_STORE_RELEASE.md).
+
+End users run the MSI and launch MolarMap from the Start menu; no separate .NET installation, mod manager, game-file modification, account, or network connection is required.
 
 ## Grounded save decoding
 
@@ -40,9 +42,11 @@ The CLI also validates the world's party discovery record and prints its authori
 
 For local format research, `--decoded-output` writes the validated decoded bytes to an explicit caller-selected path. Private decoded saves remain excluded from the repository and must never be committed.
 
-The bundled `ooz.exe` is integrity-pinned to SHA-256:
+The repository's reviewed upstream `ooz.exe` is integrity-pinned to SHA-256:
 
 `271D3FD02E582175FF033D0A23DCA3785B6888FA21B8CD06741BA8C19B71DF41`
+
+Trusted releases sign a staged copy before compilation. Signing changes its bytes, so the release pipeline compiles the signed helper's exact SHA-256 into `GroundedMolar.Core.dll` and records it in `release-manifest.json`.
 
 The native decoder is treated as hostile: it runs in a no-capability AppContainer with no network access, read-only access to one private staging directory, an explicit inherited-handle allowlist, and Job Object limits for one process, memory, CPU, and elapsed time. Decoded bytes travel through size-bounded stdout rather than a helper-writable output file, so the helper cannot consume disk beyond the broker-created, quota-checked executable and input snapshots. Any sandbox, helper, quota, crash, or output validation failure returns `Unsupported` and produces no markers.
 

@@ -1,8 +1,8 @@
-# GroundedMolar UI design guidelines
+# MolarMap UI design guidelines
 
 ## Purpose
 
-GroundedMolar should feel at home beside Grounded without pretending to be an in-game screen. These guidelines translate the game's settings UI into a maintainable Windows/WPF design system while preserving the tool's clarity, accessibility, and fail-closed data semantics.
+MolarMap should feel at home beside Grounded without pretending to be an in-game screen. These guidelines translate the game's settings UI into a maintainable Windows/WPF design system while preserving the tool's clarity, accessibility, and fail-closed data semantics.
 
 The game's exported UI is a reference, not a component library. Do not copy extracted fonts or textures into a distributable build unless their redistribution rights are established.
 
@@ -24,7 +24,7 @@ Evidence reviewed on 2026-08-23:
 - The corresponding exported PNGs for those assets, plus `T_UI_BtnSolid`, `T_UI_BtnSquare`, `T_UI_ExpandoRotato`, `T_UI_MenuHeaderThing`, and `SCABAnims/T_UI_OminentSlide_3`: pixel-level silhouette, alpha-mask, outline, and state treatment.
 - `src/GroundedMolar.App/MainWindow.xaml`: the current desktop UI being guided.
 
-The JSON export proves widget structure and configured values, but it is not a runtime screenshot. Treat exact appearance after Unreal materials, animation curves, scaling, and platform-specific rendering as unverified. Rules below labeled **Grounded-derived** follow exported values; **Project adaptation** rules are deliberate GroundedMolar decisions.
+The JSON export proves widget structure and configured values, but it is not a runtime screenshot. Treat exact appearance after Unreal materials, animation curves, scaling, and platform-specific rendering as unverified. Rules below labeled **Grounded-derived** follow exported values; **Project adaptation** rules are deliberate MolarMap decisions.
 
 ### Texture findings
 
@@ -50,7 +50,7 @@ Grounded's settings language combines a playful, chunky silhouette with discipli
 - Strong selection and focus feedback using shape, texture/layer, and color together.
 - A stable list-and-detail layout: choices remain scannable while explanation occupies a separate region.
 
-For GroundedMolar, preserve the warmth, weight, and clear states. Avoid ornamental density that competes with the map or makes authoritative status harder to read.
+For MolarMap, preserve the warmth, weight, and clear states. Avoid ornamental density that competes with the map or makes authoritative status harder to read.
 
 ## Layout system
 
@@ -203,7 +203,7 @@ Use 100–180 ms transitions for hover and focus if animation is added. Honor Wi
 
 ## Information and status language
 
-GroundedMolar's truth model takes priority over theme fidelity:
+MolarMap's truth model takes priority over theme fidelity:
 
 - Say `Validated`, `Unknown`, or `Unsupported` explicitly where confidence affects output.
 - Say `Uncollected`, `Collected`, `Approached`, or `Unapproached` only when resolved from authoritative records.
@@ -213,7 +213,7 @@ GroundedMolar's truth model takes priority over theme fidelity:
 - Errors should state what failed, what remains safe, and the next recovery action. Do not expose raw exception text as the primary message.
 - Filenames, paths, counts, and zoom are metadata; visually subordinate them to the current save identity and validation result.
 
-## Recommended GroundedMolar composition
+## Recommended MolarMap composition
 
 For the current single-window app:
 

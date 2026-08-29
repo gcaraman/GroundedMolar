@@ -1,19 +1,22 @@
 using System.Security.Cryptography;
 using System.Buffers.Binary;
+using System.Reflection;
 
 namespace GroundedMolar.Core;
 
 public sealed class OozKrakenDecoder : IKrakenDecoder
 {
     public const string PinnedSha256 = "271D3FD02E582175FF033D0A23DCA3785B6888FA21B8CD06741BA8C19B71DF41";
+    internal static string ConfiguredPinnedSha256 { get; } = ResolveConfiguredPin();
     private readonly byte[] _executableBytes;
     private readonly byte[] _executableSha256;
     private readonly TimeSpan _timeout;
     private const int MaximumDecodedSize = GroundedCsavDecoder.DefaultMaximumDecodedSize;
     private const int MaximumExecutableSize = 16 * 1024 * 1024;
 
-    public OozKrakenDecoder(string executablePath, TimeSpan? timeout = null, string? requiredSha256 = PinnedSha256)
+    public OozKrakenDecoder(string executablePath, TimeSpan? timeout = null, string? requiredSha256 = null)
     {
+        requiredSha256 ??= ConfiguredPinnedSha256;
         var fullExecutablePath = Path.GetFullPath(executablePath);
         _timeout = timeout ?? TimeSpan.FromSeconds(60);
         using var executable = new FileStream(fullExecutablePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
@@ -31,6 +34,17 @@ public sealed class OozKrakenDecoder : IKrakenDecoder
         }
     }
 
+    private static string ResolveConfiguredPin()
+    {
+        var value = typeof(OozKrakenDecoder).Assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .SingleOrDefault(attribute => attribute.Key == "OozPinnedSha256")
+            ?.Value;
+        if (value is null || value.Length != 64 || value.Any(character => !Uri.IsHexDigit(character)))
+            throw new InvalidOperationException("The compiled ooz.exe SHA-256 pin is missing or malformed.");
+        return value.ToUpperInvariant();
+    }
+
     public byte[] Decode(ReadOnlyMemory<byte> compressedPayload, int expectedDecodedSize) => Decode(compressedPayload, expectedDecodedSize, CancellationToken.None);
 
     public byte[] Decode(ReadOnlyMemory<byte> compressedPayload, int expectedDecodedSize, CancellationToken cancellationToken)
@@ -38,7 +52,7 @@ public sealed class OozKrakenDecoder : IKrakenDecoder
         cancellationToken.ThrowIfCancellationRequested();
         if (compressedPayload.IsEmpty) throw new ArgumentException("Kraken payload cannot be empty.", nameof(compressedPayload));
         if (expectedDecodedSize <= 0 || expectedDecodedSize > MaximumDecodedSize) throw new ArgumentOutOfRangeException(nameof(expectedDecodedSize));
-        var tempDirectory = Path.Combine(Path.GetTempPath(), "GroundedMolar", Guid.NewGuid().ToString("N"));
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "MolarMap", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDirectory);
         var inputPath = Path.Combine(tempDirectory, "payload.kraken");
         var executablePath = Path.Combine(tempDirectory, "ooz.exe");

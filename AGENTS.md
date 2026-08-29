@@ -1,4 +1,4 @@
-# GroundedMolar agent guide
+# MolarMap agent guide
 
 ## Mission
 
@@ -18,7 +18,7 @@ Build an offline Windows tool that derives unfound NG+ Milk Molar markers from a
 1. Read `docs/BUILD_SPEC.md` and `docs/ROADMAP.md`.
 2. Add a failing regression check for each understood binary structure.
 3. Implement the smallest evidence-backed change.
-4. Run `dotnet build` and `dotnet run --project tests/GroundedMolar.Tests`.
+4. Run `pwsh -File scripts/Test-Repo.ps1`. Never invoke `dotnet` directly for the standard verification loop: the script isolates NuGet and .NET state inside the workspace so restricted environments do not read the user-level NuGet configuration.
 5. Record proven format decisions in `docs/DECISIONS.md`.
 
 ## Verification rule

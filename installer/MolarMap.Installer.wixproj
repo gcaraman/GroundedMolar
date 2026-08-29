@@ -1,0 +1,16 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <OutputType>Package</OutputType>
+    <OutputName>MolarMap-$(ProductVersion)-win-x64</OutputName>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">1.0.1</ProductVersion>
+    <PublisherName Condition="'$(PublisherName)' == ''">MolarMap contributors</PublisherName>
+    <PayloadDirectory Condition="'$(PayloadDirectory)' == ''">$(MSBuildThisFileDirectory)..\artifacts\payload</PayloadDirectory>
+    <DefineConstants>$(DefineConstants);ProductVersion=$(ProductVersion);PublisherName=$(PublisherName)</DefineConstants>
+    <SuppressValidation>false</SuppressValidation>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <BindPath Include="$(PayloadDirectory)" BindName="Payload" />
+  </ItemGroup>
+</Project>

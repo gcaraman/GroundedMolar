@@ -25,6 +25,7 @@ public sealed class ProfiledMolarAnalyzer(IEnumerable<ISaveFormatProfile> profil
     {
         ISaveFormatProfile? profile = null;
         ParsedSaveFormat? parsed = null;
+        var rejectionReasons = new List<string>();
         foreach (var candidate in _profiles)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -37,12 +38,18 @@ public sealed class ProfiledMolarAnalyzer(IEnumerable<ISaveFormatProfile> profil
                         : atomic.Parse(worldSave.Span);
                     profile = candidate; break;
                 }
-                catch (InvalidDataException) { }
-                catch (ArgumentOutOfRangeException) { }
+                catch (InvalidDataException exception) { rejectionReasons.Add($"{candidate.Name}: {exception.Message}"); }
+                catch (ArgumentOutOfRangeException exception) { rejectionReasons.Add($"{candidate.Name}: {exception.Message}"); }
             }
             else if (candidate.CanParse(worldSave.Span)) { profile = candidate; break; }
         }
-        if (profile is null) return MolarAnalysis.Unsupported("No validated save-format profile recognized this file.");
+        if (profile is null)
+        {
+            var diagnostic = rejectionReasons.Count == 0
+                ? "No validated save-format profile recognized this file."
+                : $"No validated save-format profile recognized this file. {string.Join(" ", rejectionReasons)}";
+            return MolarAnalysis.Unsupported(diagnostic);
+        }
         var actors = (parsed?.Actors ?? profile.ReadActors(worldSave.Span)).ToDictionary(a => a.ActorGuid);
         var spawns = parsed?.Spawns ?? profile.ReadMolarSpawns(worldSave.Span);
         var selected = spawns.Select(spawn =>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="MolarMap"
+           Manufacturer="$(PublisherName)"
+           Version="$(ProductVersion)"
+           UpgradeCode="B9E234DB-F073-4CB9-9F0E-B30D715F504E"
+           Scope="perMachine"
+           InstallerVersion="500"
+           Language="1033">
+    <SummaryInformation Description="MolarMap offline Grounded save viewer" Manufacturer="$(PublisherName)" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of MolarMap is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="MolarMapIcon" SourceFile="..\src\GroundedMolar.App\Assets\MolarMap.ico" />
+    <Icon Id="MolarMap.exe" SourceFile="!(bindpath.Payload)\MolarMap.exe" />
+    <Property Id="ARPPRODUCTICON" Value="MolarMapIcon" />
+    <Property Id="ARPCONTACT" Value="$(PublisherName)" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="MolarMap" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="MolarMap" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="MolarMap" Level="1">
+      <ComponentGroupRef Id="PayloadFiles" />
+      <ComponentRef Id="MainExecutable" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="PayloadFiles" Directory="INSTALLFOLDER">
+      <Files Include="!(bindpath.Payload)\**">
+        <Exclude Files="!(bindpath.Payload)\MolarMap.exe" />
+      </Files>
+    </ComponentGroup>
+
+    <Component Id="MainExecutable" Directory="INSTALLFOLDER" Guid="*">
+      <File Id="MolarMapExecutable" Source="!(bindpath.Payload)\MolarMap.exe" KeyPath="yes" Checksum="yes">
+        <Shortcut Id="MolarMapStartMenuShortcut"
+                  Directory="ApplicationProgramsFolder"
+                  Name="MolarMap"
+                  Description="Offline NG+ Milk Molar map"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="MolarMap.exe"
+                  Advertise="yes" />
+      </File>
+      <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+    </Component>
+  </Fragment>
+</Wix>
