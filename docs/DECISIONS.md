@@ -1,5 +1,19 @@
 # Evidence and decisions
 
+## Full guide audit and eastern laser correction (2026-09-12)
+
+The 219-entry catalog was compared with live source revision 50346: all coordinates/categories and whitespace-normalized descriptions agree. The source itself contains the numbering typo corrected locally from BBQ-wall #14 to #140, corroborated by its attached image title. Number coverage 1–219 is now enforced by the loader. Existing user-reviewed pot numbering corrections remain. The user's left eastern-laser identification and atomic save transforms establish separate #34/#35 GUID bindings in the JSON; no per-molar runtime constants were added.
+
+The reproducible `scripts/Audit-MolarHints.ps1` scan uses production decoding, validated selected records and the production hint lookup, and writes only ignored reports. The completed scan covered 199 distinct spawns from 106 validated saves across 14 worlds; 46 unsupported saves and 10 decode failures contributed no observations. Four duplicate-hint groups and other uncertain matches remain flagged, not forcibly assigned. Source agreement does not prove a spawn-to-description mapping. Full evidence, coverage, limitations and review candidates are in [MOLAR_GUIDE_AUDIT.md](MOLAR_GUIDE_AUDIT.md).
+
+## Nexus 1.0.1 distribution decision
+
+The Nexus Mods File Submission Guidelines were re-checked on 2026-08-29 (the page reported a 2026-08-04 update). Nexus permits functional executables and utilities; it does not require MolarMap to fall back to the portable ZIP solely because the release contains an installer. The relevant restrictions are satisfied by design: MolarMap is functional, offline, non-destructive, does not auto-update or otherwise communicate over the internet, and is submitted with accurate requirements and caveats. Nexus still virus-scans uploaded files.
+
+Nexus distribution for 1.0.1 therefore remains the ZIP containing the signed x64 MSI, supporting notices, release notes, and SHA-256 manifest produced by `scripts/Publish-Release.ps1`. This archive wrapper is the Nexus upload artifact; the signed MSI inside is the installation trust boundary. The portable 1.0.0-style application ZIP is only the fallback if Nexus later rejects installer-bearing archives.
+
+Publication was not attempted on 2026-08-29 because no publicly trusted code-signing identity was available in either Windows certificate store or the configured environment. The only generated 1.0.1 artifacts are an unsigned rehearsal whose manifest says `productionReady: false` and whose filenames say `UNSIGNED-DO-NOT-PUBLISH`. Uploading or renaming that rehearsal would violate the release gates. The repository build passed, but two consecutive standard verification runs also failed four production-sandbox integration checks when Windows returned `CreateProcess(AppContainer)` error 2; deterministic checks passed and private-fixture checks were unavailable. Publishing remains blocked until the signed production pipeline, complete verification, malware scan, and clean-machine checks in `docs/RELEASE_1.0.1.md` pass.
+
 Profile rejection diagnostics retain the exact structural validation message while continuing to return `Unsupported` with no markers. Diagnostics identify the profile and failed invariant only; they do not include decoded save bytes or private record contents.
 
 Either selected NG+ molar group, or both groups, may have a serialized count of zero after all corresponding molars are collected. A zero-count group ends immediately after its count and has no reserved field or entry records. The exact normal and underwater group records are still required exactly once; zero selected entries validate and render zero markers rather than becoming `Unsupported`.
@@ -20,13 +34,21 @@ Reference map: 1258 × 1258.
 
 Store normalized coordinates; Z is metadata only.
 
-## Exported map texture comparison — not a replacement calibration
+## Historical exported map texture comparison
 
 FModel's `UI_MapPanel.json` exports `TextureSize` 4096 × 4096, `MinBounds` (-100000, -100000), `MaxBounds` (100000, 100000), zoom levels 1.75/1.33/1.0/0.75/0.5, and current/default index 2 (1.0). The composed `T_UI_Worldmap` export is also 4096 × 4096.
 
 The bounds suggest the candidate transform `x=(worldY+100000)*4096/200000`, `y=(100000-worldX)*4096/200000`. However, placement belongs to native `/Script/Maine MapPanelWidget`, and the exported Blueprint does not reveal that conversion. At the independently validated logout molar (-25383.043, -7996.126), the candidate is (1884.239, 2567.845), while the accepted screenshot calibration scaled to 4096 is (1886.345, 2536.943): a 30.974-pixel separation, almost entirely vertical. Therefore the candidate remains tentative and does not replace the accepted calibration.
 
-The interactive save picker uses the accepted projection to place marker elements over the native 512 × 512 map. Each marker center is projected directly from the selected spawn's serialized X/Y transform. Picking a save triggers analysis and rendering immediately, and the persisted last-selected save is reloaded at startup. Unsupported or partial analyses clear the image rather than retaining or inventing markers.
+## Exported bounds accepted for map placement (2026-09-12)
+
+The user's oak-lab molar screenshot (guide #22) supplies an independent local placement check. It is a zoomed and panned view at the displayed 1.75× setting, not a full-map image. Registration uses the matching stepped oak outline in the native 512 × 512 background, never the screenshot edges: its top horizontal run occupies native columns 310–315 at row 230. In the 2048 × 1152 displayed screenshot that run starts at approximately (841, 665), and each native pixel spans about 14.9 screenshot pixels. The molar silhouette center at approximately (936, 700) therefore maps to about (316.4, 232.3), with a conservative 0.3-native-pixel measurement tolerance. Terrain is used only to register the viewport, not to infer a spawn or collection state.
+
+A validated local save's selected oak-area record supplies the atomic world transform (9254.27734375, 23622.41015625, 3957.68359375). The historical screenshot calibration projects it to (316.235, 229.114); the exported bounds project it to (316.473, 232.309), agreeing with the independent image measurement. The old calibration is about 3.2 native pixels too high here. Guide #22 identifies the comparison area only; its approximate guide coordinates do not determine rendered position. The screenshot's collected icon is a visual position reference only and does not override the save's state.
+
+Normal rendering now uses `u=(worldY+100000)/200000`, `v=(100000-worldX)/200000`, scaled to the map texture and then the viewport. The historical `WorldToReferenceMap` method remains available for diagnostics only. The native game's implementation is still not decompiled; this accepts its authored bounds using one independent local screenshot check, not a claim of exhaustive whole-map validation. Additional distant anchors remain useful. A regression first failed at V×512=229.114, then passed against the independently measured (316.4, 232.3) after the change.
+
+The interactive save picker uses this bounds projection to place marker elements over the native 512 × 512 map. Each marker center is projected directly from the selected spawn's serialized X/Y transform. Picking a save triggers analysis and rendering immediately, and the persisted last-selected save is reloaded at startup. Unsupported or partial analyses clear the image rather than retaining or inventing markers.
 
 The desktop application is intentionally limited to save picking, recursive folder monitoring, image preview, and manual refresh. Game-window tracking, transparent rendering, viewport calibration, click-through controls, and global hotkeys were removed; they do not participate in save analysis or preview rendering.
 
@@ -141,6 +163,14 @@ The desktop marker popup may enrich an already authoritative selected spawn with
 
 Guide number, category, coordinates, and location prose are community-authored, approximate, and optional; they do not participate in spawn reconstruction, persistent actor resolution, confidence, the accepted marker projection, or normal marker eligibility. One persisted global preference controls guide number, hint text, and the approximation warning across every marker popup; the warning is rendered only while hints are enabled. The popup contains no per-marker hint toggle. The preferences card links to the source guide through a confirmation dialog that displays the full external URL before offering Open and Cancel. If the guide catalog cannot load or validate, the application must fail the hint independently rather than changing validated save state.
 
+## Reviewed guide identity corrections (2026-09-12)
+
+The user reported the rake/cave descriptions swapped and the inside-pot/rim hints duplicated. Reading selected records from 25 recent local saves reproduced the problem: the rake spawn at Z=5932.927 chose cave entry 194, the cave spawn at Z=1692.181 chose rake entry 195, and both pot spawns (Z=2412.161 inside, Z=4492.684 rim) chose entry 114. The user supplied the intended number/description associations. The source snapshot also had the two pot numbers reversed. Approximate X/Y matching alone cannot resolve these cases.
+
+Optional `matchedSpawnGuid` values in `milk-molar-guide.json` now bind entries 194/195 to cave/rake and 114/115 to inside-pot/rim respectively. Pot numbers are corrected to 14 inside and 15 rim. Original guide coordinates and prose remain in the file. Runtime code contains no per-molar descriptions, numbers, GUIDs, or height thresholds: it first looks for a matching serialized spawn GUID, checks underwater compatibility, and otherwise retains the existing approximate coordinate lookup. GUID metadata must use four eight-hex-digit words and be unique case-insensitively; malformed or ambiguous metadata rejects the catalog independently of save analysis. A matched GUID with an incompatible underwater category returns no hint.
+
+These bindings are optional hint enrichment only, not a spawn list or state evidence. Matching operates on one already parsed spawn and never subtracts candidates or depends on which others are selected/collected. Tests cover all four authoritative transforms with both collected and uncollected states, invalid/duplicate metadata, and edited descriptions loading from the file. Other unreviewed guide matches remain approximate. No private save fixtures are committed.
+
 ## Trusted dual-channel release uses synchronized channel-native packages
 
 Version 1.0.1 uses an x64 MSIX uploaded directly to Microsoft Store and a separately signed self-contained offline x64 MSI inside the Nexus/direct-download ZIP. Both packages must come from the same source revision, product version, runtime floor, helper source bytes, and user-visible release notes. The Store package uses the Partner Center identity `Gweko.MolarMap` and publisher `CN=7F7844FD-9C33-43BF-91A4-548741E63E59`; it is intentionally unsigned before submission because Microsoft applies the trusted Store signature after certification. It must never be distributed through Nexus or direct download.
@@ -150,3 +180,25 @@ The Nexus/direct pipeline signs a staged `ooz.exe` before compilation because Au
 When both channel manifests exist, either packaging pipeline runs a cross-channel gate that requires matching product, version, architecture, and helper source hash, validates the Store-only readiness flags, and proves that the Nexus ZIP contains no MSIX.
 
 The public signing identity authenticates the redistributed helper bytes but does not claim authorship of upstream `ooz`. The installed app and MSI retain the original single-molar `MolarMap.ico` with no map background. The separate marketplace-only artwork is an AI-generated design with three consistent molar POI symbols on an abstract cropped backyard-map fragment and explicit provenance disclosure; it avoids both a full game-map reproduction and navigation imagery, and does not use requested Grounded, Obsidian, Xbox, or Microsoft logos.
+
+## Mixed NG+ molar asset within the general group (2026-09-12)
+
+The reported Oak Hill save (game time 0d, 9m, 40s) decodes to 2,724,292 bytes and contains 56 general-group selections plus 10 underwater-group selections. General-group entry 30 carries the exact known underwater NG+ spawn-data asset. Its FString, transform, spawn GUID, actor GUID, structural fields, and persistent actor signature match the accepted layout. Requiring the normal asset for every general-group entry incorrectly rejected this save.
+
+The general group now accepts either of the two proven NG+ molar spawn-data assets; the dedicated underwater group still accepts only its proven underwater asset. IsUnderwater derives from the serialized spawn-data asset, while SpawnGroup preserves the original group. All other layout, uniqueness, actor-state, and confidence checks remain unchanged. The reported save validates with 66 selected/uncollected, zero collected/unknown, and 11 underwater assets in total. Synthetic regression covers the mixed group, atomic identity/transform, actor state, map loading, and unknown-asset rejection. An optional GROUNDED_MIXED_GROUP_SAVE regression decodes the private save through the production decoder and loads its frozen 512 x 512 WPF map. Private data stays in ignored artifacts only.
+
+## Desktop error logging (2026-09-12)
+
+Errors append UTC timestamps, context, rejection diagnostics, and exception details to logs/MolarMap.log beside the executable. Logs rotate at 2 MiB with one previous file. If the install folder is protected, logging falls back to LocalAppData/MolarMap/logs. Logging failures cannot crash the app. Save rejection, refresh/retry, screenshot, guide, watcher, preference, and unhandled UI/process/task errors are covered; expected cancellation is excluded. Logs may contain local paths and diagnostic identifiers, but never decoded save payloads. Regression verifies append, rotation, and an unwritable destination.
+
+## User-reviewed wiki pair bindings (2026-09-12)
+
+The user resolved the four remaining audited collisions using directions explicitly confirmed to refer to the wiki guide map: #73 left/#72 right, #109 left/#108 right, #118 left/#116 right, and #218 above/#219 below. Atomic GUID/XYZ observations from the existing validated-save audit identify the pair members in the documented guide coordinate frame. The eight bindings and evidence are listed in MOLAR_GUIDE_AUDIT.md and serialized as matchedSpawnGuid in the JSON. Existing descriptions already match the supplied identities. Source pin coordinates remain a transcription; they do not replace save transforms. These are hint identity corrections only and do not establish selected spawns, collection state, or format confidence. Regression checks resolve all eight independently across collected, uncollected, and unknown states.
+
+### Brawny Bin binding correction (2026-09-12)
+
+The user reported that the initial #218/#219 bindings were reversed. Corrected #218 (between the game box and cardboard box) to 9B5FFE39-496231A0-8AB36BB2-43255BB4 and #219 (inside the blue waffle ball) to CD10B7F4-43680B03-C33215A6-F38058D6. This direct review supersedes the previous interpretation of wiki above/below. JSON bindings, regression expectations, and the audit table now agree; descriptions and source coordinates are unchanged.
+
+## 2026-09-12 — Portable 1.0.2 distribution
+
+Preserve the existing unsigned, self-contained Windows x64 portable ZIP for GitHub and Nexus at the user's direction. The portable script is separate from signed MSI and Store packaging. Include versioned release notes and SHA-256 checksums; never include private save fixtures.

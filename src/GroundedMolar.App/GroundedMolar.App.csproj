@@ -11,8 +11,8 @@
     <Product>MolarMap</Product>
     <Description>Offline viewer for authoritative uncollected NG+ Milk Molar locations in Grounded saves.</Description>
     <Authors>MolarMap contributors</Authors>
-    <Version>1.0.1</Version>
-    <ApplicationVersion>1.0.1.0</ApplicationVersion>
+    <Version>1.0.2</Version>
+    <ApplicationVersion>1.0.2.0</ApplicationVersion>
     <Company>MolarMap contributors</Company>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>

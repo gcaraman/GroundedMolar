@@ -1,6 +1,12 @@
 # Nexus Mods release preparation
 
-Checked against the Nexus Mods File Submission Guidelines and Terms of Service on 2026-08-26. Re-check them immediately before every public upload because policies can change.
+## Version 1.0.2 portable release
+
+Upload `artifacts/portable/1.0.2/MolarMap-1.0.2.zip` as version **1.0.2**. This is the same unsigned self-contained portable ZIP distributed on GitHub. Extract all files and run `MolarMap.exe`; no MSI or installation is involved. Use `docs/RELEASE_1.0.2.md` for the changelog and publish the hash from `SHA256SUMS.txt`. Local error logs are stored beside the app under `logs`, with a LocalAppData fallback. The signed-installer checklist below describes the separate MSI channel, not this portable release.
+
+## Signed MSI channel reference
+
+Checked against the Nexus Mods File Submission Guidelines on 2026-08-29; the page reported a 2026-08-04 update. The current guidelines permit functional executables and utilities, including this offline installer-bearing release archive. Re-check the guidelines and Terms of Service immediately before every public upload because policies can change.
 
 ## Prepared listing
 

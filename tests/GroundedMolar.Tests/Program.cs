@@ -33,6 +33,22 @@ Run("latest-save discovery preserves timestamp and path ordering", () =>
         if (Directory.Exists(root)) Directory.Delete(root, true);
     }
 });
+Run("error logs append details rotate and tolerate unwritable destinations", () =>
+{
+    var root = Path.Combine(Path.GetTempPath(), $"MolarMap-log-test-{Guid.NewGuid():N}");
+    try
+    {
+        True(AppLog.TryWrite(root, "first error\n"), "Log was not created.");
+        True(AppLog.TryWrite(root, "second error\n"), "Log append failed.");
+        var path = Path.Combine(root, "MolarMap.log");
+        True(File.ReadAllText(path).Contains("first error\nsecond error"), "Error details were lost.");
+        File.WriteAllBytes(path, new byte[2 * 1024 * 1024]);
+        True(AppLog.TryWrite(root, "rotated error"), "Rotation failed.");
+        True(File.Exists(path + ".previous") && File.ReadAllText(path).Contains("rotated error"), "Rotation lost output.");
+        True(!AppLog.TryWrite(path, "cannot write"), "A file cannot serve as a log directory.");
+    }
+    finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+});
 Run("latest-save discovery honors cancellation", () =>
 {
     var root = Path.Combine(Path.GetTempPath(), $"MolarMap-discovery-{Guid.NewGuid():N}");
@@ -125,9 +141,26 @@ Run("unapproached marker opacity is adjustable and bounded", () =>
     Near(MolarMarkerOpacity.DefaultUnapproached, MolarMarkerOpacity.Clamp(double.NaN), .000001);
 });
 Run("remaining molar projection", () => { var p = new CoordinateProjector().WorldToReferenceMap(-25383.043, -7996.126); Near(579.35, p.X, .02); Near(779.17, p.Y, .02); });
+Run("oak lab marker matches independent in-game screenshot", () =>
+{
+    // Screenshot registered against the native map's oak outline, independently of the icon.
+    // The observed icon center is approximately (316.4, 232.3) in logical map pixels.
+    var p = new CoordinateProjector().WorldToNormalizedMap(9254.27734375, 23622.41015625);
+    Near(316.4, p.U * 512, .3);
+    Near(232.3, p.V * 512, .3);
+});
 Run("known calibration projection", () => { var p = new CoordinateProjector().WorldToReferenceMap(65976.484, -53238.310); Between(p.X, 294, 299); Between(p.Y, 206, 212); });
-Run("accepted projection scales to exported texture", () => { var p = new CoordinateProjector().WorldToExportedTexture(-25383.043, -7996.126); Near(1886.34, p.X, .05); Near(2536.94, p.Y, .05); });
-Run("tentative game bounds remain isolated", () => { var p = new CoordinateProjector().WorldToTentativeGameBoundsTexture(-25383.043, -7996.126); Near(1884.24, p.X, .05); Near(2567.84, p.Y, .05); });
+Run("game bounds projection scales to exported texture", () => { var p = new CoordinateProjector().WorldToExportedTexture(-25383.043, -7996.126); Near(1884.24, p.X, .05); Near(2567.84, p.Y, .05); });
+Run("normalized map preserves game bounds and axis orientation", () =>
+{
+    var projector = new CoordinateProjector();
+    foreach (var (x, y, u, v) in new[] { (100000d, -100000d, 0d, 0d), (0d, 0d, .5, .5), (-100000d, 100000d, 1d, 1d) })
+    {
+        var p = projector.WorldToNormalizedMap(x, y);
+        Near(u, p.U, .000001);
+        Near(v, p.V, .000001);
+    }
+});
 Run("offline community hint catalog is complete and category-aware", () =>
 {
     True(MolarHintCatalog.Count == 219, $"Expected 219 guide hints, found {MolarHintCatalog.Count}.");
@@ -148,6 +181,84 @@ Run("offline community hint catalog is complete and category-aware", () =>
         True(MolarHintCatalog.FindClosest(spawn)?.Id == entry.Id,
             $"Guide entry {entry.Id} does not round-trip through the oriented map lookup.");
     }
+});
+Run("reported rake cave and pot hints follow spawn identity", () =>
+{
+    var cases = new[]
+    {
+        (new UnrealGuid(0x939721B7, 0x4C6C3B46, 0xB69DD1B8, 0xA89E4A78), -34755.16796875, -10984.9228515625, 5932.9267578125, 105, "On top of the rake"),
+        (new UnrealGuid(0x68F5AEEE, 0x45B085C3, 0xC080948C, 0x6C4F5127), -33751.5703125, -11694.94921875, 1692.180908203125, 107, "Inside Dan Hamster III's cave"),
+        (new UnrealGuid(0x18EA8183, 0x4CDD82C5, 0x08A72881, 0xAB91DE90), 5130.9072265625, -4362.130859375, 2412.161376953125, 14, "Inside the pot"),
+        (new UnrealGuid(0x28F9F130, 0x484AB149, 0x015F179D, 0xE455D6E2), 5410.9091796875, -2880.472412109375, 4492.68359375, 15, "Atop the pot rim")
+    };
+    foreach (var (guid, x, y, z, number, description) in cases)
+    {
+        foreach (var state in new[] { MolarState.Uncollected, MolarState.Collected })
+        {
+            var spawn = new MolarSpawn(guid, null, x, y, z, "SG_NG+_MilkMolars", "test", 0, false, state, MolarApproachState.Unknown);
+            var hint = MolarHintCatalog.FindClosest(spawn);
+            True(hint?.Number == number && hint.Description == description, $"Spawn {guid} should have guide #{number}: {description}; got #{hint?.Number}: {hint?.Description}.");
+        }
+    }
+});
+Run("eastern laser hints distinguish middle section from cable box", () =>
+{
+    var left = new MolarSpawn(new UnrealGuid(0x7E4EE2A8, 0x42E257C8, 0x97A374B2, 0x4C0256D4), null,
+        -17066.912109375, 18710.02734375, 5623.3828125, "SG_NG+_MilkMolars", "test", 0, false, MolarState.Uncollected, MolarApproachState.Unknown);
+    var right = left with { SpawnGuid = new UnrealGuid(0x624F5ABC, 0x4DC959A0, 0xB9243CBB, 0x7A835281),
+        WorldX = -17377.90625, WorldY = 19619.666015625, WorldZ = 8087.1845703125 };
+    True(MolarHintCatalog.FindClosest(left)?.Number == 34, "The left/middle eastern-laser spawn must resolve to #34.");
+    True(MolarHintCatalog.FindClosest(right)?.Number == 35, "The right/cable-box eastern-laser spawn must resolve to #35.");
+});
+Run("user reviewed wiki pairs resolve independently by spawn identity", () =>
+{
+    var cases = new[]
+    {
+        (new UnrealGuid(0x879CB034, 0x4B8A7958, 0xC35589AA, 0xEA0E8624), 23310.064453125, 11105.9736328125, -7795.67724609375, true, 73),
+        (new UnrealGuid(0x0676F394, 0x4C8EE790, 0x33AE8480, 0x31CFC569), 23383.193359375, 11245.6220703125, -7795.67724609375, true, 72),
+        (new UnrealGuid(0xA61209D1, 0x40548155, 0xF232DC96, 0xFA1D7BDB), -3384.937255859375, -56158.671875, 10091.916015625, false, 109),
+        (new UnrealGuid(0xD4138527, 0x4D57599C, 0x937CBA80, 0x0FA0AA16), -1946.5064697265625, -57126.8046875, 5484.05517578125, false, 108),
+        (new UnrealGuid(0xA9534D87, 0x46471999, 0xD12955B9, 0x840B10BD), -45825.859375, -64898.33203125, 584.2032470703125, false, 118),
+        (new UnrealGuid(0xE9C67113, 0x4D613D18, 0xF58FB089, 0x66BE5191), -44081.328125, -64334.73046875, 2241.56103515625, false, 116),
+        (new UnrealGuid(0xCD10B7F4, 0x43680B03, 0xC33215A6, 0xF38058D6), 85855.5625, 14883.0126953125, 10852.2265625, false, 219),
+        (new UnrealGuid(0x9B5FFE39, 0x496231A0, 0x8AB36BB2, 0x43255BB4), 89067.7578125, 15890.4140625, 10238.998046875, false, 218)
+    };
+    foreach (var (guid, x, y, z, underwater, number) in cases)
+    foreach (var state in new[] { MolarState.Uncollected, MolarState.Collected, MolarState.Unknown })
+    {
+        var spawn = new MolarSpawn(guid, null, x, y, z, "SG_NG+_MilkMolars", "test", 0, underwater, state, MolarApproachState.Unknown);
+        var hint = MolarHintCatalog.FindClosest(spawn);
+        True(hint?.Number == number && hint.MatchedSpawnGuid == guid.ToString(),
+            $"Reviewed wiki spawn {guid} must resolve to #{number}; got #{hint?.Number}.");
+    }
+});
+Run("guide numbering covers every number once", () =>
+{
+    True(MolarHintCatalog.All.Select(entry => entry.Number).Order().SequenceEqual(Enumerable.Range(1, 219)),
+        "Guide numbers must cover 1–219 exactly once; the BBQ wall entry is #140, not a second #14.");
+});
+Run("guide identity metadata rejects malformed and duplicate GUIDs", () =>
+{
+    var json = File.ReadAllText(MolarHintCatalog.DefaultPath);
+    const string potGuid = "18EA8183-4CDD82C5-08A72881-AB91DE90";
+    foreach (var invalid in new[]
+    {
+        json.Replace(potGuid, "not-a-spawn-guid", StringComparison.Ordinal),
+        json.Replace(potGuid, "28f9f130-484ab149-015f179d-e455d6e2", StringComparison.Ordinal)
+    })
+        WithRawFile(System.Text.Encoding.UTF8.GetBytes(invalid), path => Throws<InvalidDataException>(() => MolarHintCatalog.Load(path)));
+
+    var edited = json.Replace("Inside the pot", "Edited file description", StringComparison.Ordinal);
+    WithRawFile(System.Text.Encoding.UTF8.GetBytes(edited), path =>
+    {
+        var catalog = MolarHintCatalog.Load(path);
+        var spawn = new MolarSpawn(new UnrealGuid(0x18EA8183, 0x4CDD82C5, 0x08A72881, 0xAB91DE90),
+            null, 5130.9072265625, -4362.130859375, 2412.161376953125, "test", "test", 0, false, MolarState.Uncollected, MolarApproachState.Unknown);
+        var hint = MolarHintCatalog.FindClosest(spawn, catalog)!;
+        True(hint.Description == "Edited file description", "Matched hint prose must come from the file.");
+    });
+    WithRawFile(System.Text.Encoding.UTF8.GetBytes(json.Replace("\"number\": 140", "\"number\": 14", StringComparison.Ordinal)),
+        path => Throws<InvalidDataException>(() => MolarHintCatalog.Load(path)));
 });
 Run("repeated guide prose remains attached to distinct source pins", () =>
 {
@@ -214,6 +325,32 @@ Run("v1 actor lookup preserves recognized and absent persistent states in one pa
     True(passes == 1, $"Expected one actor lookup pass, got {passes}.");
     True(analysis.Uncollected.Count == 1 && analysis.Uncollected.Single().ApproachState == MolarApproachState.Approached, "Recognized state 1 changed.");
     True(analysis.Collected.Count == 1, "An actor with only its selected-spawn reference was not collected.");
+});
+Run("v1 accepts underwater spawn data in the general group and rejects unknown assets", () =>
+{
+    const string normal = "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_NG+.SD_MilkMolar_NG+_C";
+    const string underwater = "/Game/Blueprints/Items/SpawnPoints/SpawnData/SD_MilkMolar_Underwater_NG+.SD_MilkMolar_Underwater_NG+_C";
+    var original = BuildSyntheticMolarSave(true, 1, true);
+    var offset = original.AsSpan().IndexOf(System.Text.Encoding.ASCII.GetBytes(normal));
+    foreach (var asset in new[] { underwater, underwater.Replace("NG+", "BAD") })
+    {
+        using var stream = new MemoryStream();
+        stream.Write(original.AsSpan(0, offset - 4));
+        WriteFString(stream, asset);
+        stream.Write(original.AsSpan(offset + normal.Length + 1));
+        var analysis = new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()).Analyze(stream.ToArray());
+        if (asset != underwater)
+        {
+            True(analysis.Confidence == SaveConfidence.Unsupported && analysis.Selected.Count == 0, "Unknown spawn assets must fail closed.");
+            continue;
+        }
+        True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Mixed group rejected.");
+        var spawn = analysis.Uncollected.Single(x => x.SpawnGuid == new UnrealGuid(1, 2, 3, 4));
+        True(spawn.IsUnderwater && spawn.SpawnGroup == "SG_NG+_MilkMolars" && spawn.SpawnData == underwater, "Asset type or serialized group was lost.");
+        True(spawn.ActorGuid == new UnrealGuid(5, 6, 7, 8) && spawn.WorldX == 10 && spawn.WorldY == 20 && spawn.WorldZ == 30, "Atomic identity/transform changed.");
+        True(spawn.ApproachState == MolarApproachState.Approached && analysis.Uncollected.Count == 2, "Actor state changed.");
+        True(SaveMapImageRenderer.LoadMapAsync(analysis, CancellationToken.None).GetAwaiter().GetResult().IsFrozen, "Mixed save preview failed.");
+    }
 });
 Run("v1 accepts independently or jointly empty selected molar groups", () =>
 {
@@ -431,6 +568,18 @@ if (OperatingSystem.IsWindows())
     }));
 }
 
+var mixedFixture = Environment.GetEnvironmentVariable("GROUNDED_MIXED_GROUP_SAVE");
+if (!string.IsNullOrWhiteSpace(mixedFixture)) Run("real mixed-group save produces validated map preview", () =>
+{
+    var service = new SaveAnalysisService(new GroundedCsavDecoder(new OozKrakenDecoder(FindOozFile())),
+        new ProfiledMolarAnalyzer([new GroundedSaveFormatProfileV1()], new GroundedMolarStateResolverV1()));
+    var analysis = service.Analyze(mixedFixture);
+    True(analysis.Confidence == SaveConfidence.Validated, analysis.Diagnostic ?? "Fixture rejected.");
+    True(analysis.Selected.Count == 66 && analysis.Uncollected.Count == 66 && analysis.Unknown.Count == 0, "Mixed fixture counts changed.");
+    True(analysis.Selected.Count(x => x.IsUnderwater && x.SpawnGroup == "SG_NG+_MilkMolars") == 1, "Expected one underwater asset in general group.");
+    var map = SaveMapImageRenderer.LoadMapAsync(analysis, CancellationToken.None).GetAwaiter().GetResult();
+    True(map.IsFrozen && map.PixelWidth == 512 && map.PixelHeight == 512, "Real-save preview failed.");
+});
 var fixtureDirectory = Environment.GetEnvironmentVariable("GROUNDED_FIXTURE_DIR");
 if (!string.IsNullOrWhiteSpace(fixtureDirectory))
 {

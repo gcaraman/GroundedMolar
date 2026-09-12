@@ -152,19 +152,22 @@ public partial class MainWindow : Window
             }
             else
             {
+                AppLog.Error($"Save analysis rejected: {path}", analysis.Diagnostic);
                 CurrentSaveSummary.Text = "This save version isn't supported";
                 SetConfidenceState("Status.Warning");
-                ClearPreview("This save format is not validated, so no image was created.");
+                ClearPreview("This save format is not validated. Error details are in logs/MolarMap.log.");
             }
             PersistSettings();
         }
         catch (Exception exception) when (!userInitiated && exception is IOException or UnauthorizedAccessException)
         {
+            AppLog.Error("Automatic save refresh failed; retrying", exception);
             ScheduleReload();
         }
         catch (OperationCanceledException) when (analysisCancellation.IsCancellationRequested) { }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AppLog.Error("Save preview failed", exception);
             CurrentSaveSummary.Text = "This save couldn't be opened";
             SetConfidenceState("Status.Error");
             ClearPreview("The save could not be read, so no image was created.");
@@ -246,6 +249,7 @@ public partial class MainWindow : Window
         try { guide = MolarHintCatalog.FindClosest(marker); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
+            AppLog.Error("Community guide lookup failed", exception);
             guide = null;
         }
         var hintText = new TextBlock
@@ -469,7 +473,7 @@ public partial class MainWindow : Window
                     return AnalysisService.Value.Analyze(path, cancellationToken);
                 }, cancellationToken);
             }
-            catch (Exception exception) when (attempt < delays.Length && exception is IOException or UnauthorizedAccessException) { await Task.Delay(delays[attempt], cancellationToken); }
+            catch (Exception exception) when (attempt < delays.Length && exception is IOException or UnauthorizedAccessException) { AppLog.Error($"Save read failed on attempt {attempt + 1}", exception); await Task.Delay(delays[attempt], cancellationToken); }
         }
     }
 
@@ -488,7 +492,11 @@ public partial class MainWindow : Window
         _saveWatcher.Created += SaveChanged;
         _saveWatcher.Renamed += SaveChanged;
         _saveWatcher.Deleted += SaveChanged;
-        _saveWatcher.Error += (_, _) => Dispatcher.BeginInvoke(ScheduleReload);
+        _saveWatcher.Error += (_, e) =>
+        {
+            AppLog.Error("Save folder watcher failed", e.GetException());
+            Dispatcher.BeginInvoke(ScheduleReload);
+        };
         UpdateMonitorStatus();
     }
 
@@ -572,7 +580,7 @@ public partial class MainWindow : Window
             SaveScreenshotPreview.Source = bitmap;
             SaveScreenshotPlaceholder.Visibility = Visibility.Collapsed;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidDataException or OperationCanceledException) { }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidDataException or OperationCanceledException) { if (exception is not OperationCanceledException) AppLog.Error("Save screenshot failed", exception); }
     }
 
     private static string? MatchFolderValue(string? folder, string label)
@@ -652,6 +660,7 @@ public partial class MainWindow : Window
         }
         catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
         {
+            AppLog.Error("Opening community guide failed", exception);
             MessageBox.Show(this, "The community guide could not be opened in your browser.",
                 "Unable to open link", MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -742,7 +751,7 @@ public partial class MainWindow : Window
             AppSettingsStore.Save(settings);
             _persistedSettings = settings;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { AppLog.Error("Saving preferences failed", exception); }
     }
 
     private void OnClosed(object? sender, EventArgs e) { _reloadTimer.Stop(); _saveWatcher?.Dispose(); _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose(); _screenshotCancellation?.Cancel(); _screenshotCancellation?.Dispose(); }

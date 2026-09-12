@@ -9,3 +9,5 @@ The application reads only the Grounded save file or saves folder selected by th
 The optional “View the community guide” action displays the destination address and requires confirmation before Windows opens that address in the user’s default browser. The browser and destination website operate under their own privacy terms; MolarMap does not receive information from that visit.
 
 For privacy or support questions, use the support contact published on the official MolarMap Microsoft Store or Nexus Mods listing.
+
+Errors are logged locally in the application folder under `logs`, or `%LOCALAPPDATA%\MolarMap\logs` when that folder is not writable. Logs may contain local save paths and exception details; they are not uploaded automatically.

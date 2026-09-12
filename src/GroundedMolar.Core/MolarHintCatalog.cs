@@ -8,7 +8,8 @@ public sealed record MolarHint(
     string Description,
     int CategoryId,
     double GuideX,
-    double GuideY);
+    double GuideY,
+    string? MatchedSpawnGuid = null);
 
 public static class MolarHintCatalog
 {
@@ -23,13 +24,22 @@ public static class MolarHintCatalog
 
     public static int Count => All.Count;
 
-    public static MolarHint? FindClosest(MolarSpawn spawn)
+    public static MolarHint? FindClosest(MolarSpawn spawn) => FindClosest(spawn, All);
+
+    public static MolarHint? FindClosest(MolarSpawn spawn, IReadOnlyList<MolarHint> entries)
     {
+        // Reviewed identities resolve vertically stacked or inaccurately placed guide pins.
+        // This only enriches an existing spawn; it never affects save state or rendering.
+        var matched = entries.FirstOrDefault(entry =>
+            string.Equals(entry.MatchedSpawnGuid, spawn.SpawnGuid.ToString(), StringComparison.OrdinalIgnoreCase));
+        if (matched is not null)
+            return (matched.CategoryId == 2) == spawn.IsUnderwater ? matched : null;
+
         var mapX = (spawn.WorldY - CoordinateProjector.ExportedMinBound) * GuideMapSize /
             (CoordinateProjector.ExportedMaxBound - CoordinateProjector.ExportedMinBound);
         var mapY = (CoordinateProjector.ExportedMaxBound - spawn.WorldX) * GuideMapSize /
             (CoordinateProjector.ExportedMaxBound - CoordinateProjector.ExportedMinBound);
-        return All
+        return entries
             .Where(entry => (entry.CategoryId == 2) == spawn.IsUnderwater)
             .MinBy(entry => SquaredDistanceOnOrientedMap(entry, mapX, mapY));
     }
@@ -76,9 +86,19 @@ public static class MolarHintCatalog
         {
             throw new InvalidDataException("Milk Molar guide entry IDs must be unique.");
         }
+        if (!document.Entries.Select(entry => entry.Number).Order().SequenceEqual(Enumerable.Range(1, ExpectedEntryCount)))
+            throw new InvalidDataException("Milk Molar guide numbers must cover 1–219 exactly once.");
 
+        var matchedGuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in document.Entries)
         {
+            if (entry.MatchedSpawnGuid is { } guid)
+            {
+                var parts = guid.Split('-');
+                if (parts.Length != 4 || parts.Any(part => part.Length != 8 || part.Any(c => !Uri.IsHexDigit(c))) ||
+                    !matchedGuids.Add(guid))
+                    throw new InvalidDataException($"Milk Molar guide entry {entry.Id} has an invalid or duplicate matched spawn GUID.");
+            }
             if (entry.Id <= 0 || entry.Number <= 0 || entry.CategoryId is < 1 or > 3 ||
                 string.IsNullOrWhiteSpace(entry.Description) ||
                 !double.IsFinite(entry.GuideX) || !double.IsFinite(entry.GuideY) ||

@@ -33,10 +33,10 @@ internal static class AppSettingsStore
 
             var settings = Deserialize(legacyFilePath);
             try { Save(settings, filePath); }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { AppLog.Error("Migrating preferences failed", exception); }
             return settings;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException) { return AppSettings.Default; }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException) { AppLog.Error("Loading preferences failed", exception); return AppSettings.Default; }
     }
 
     public static void Save(AppSettings settings) => Save(settings, FilePath);

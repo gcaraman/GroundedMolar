@@ -15,13 +15,13 @@ Completed foundation: `.csav` framing, Kraken backend invocation, output-length 
 
 - Add automatic Steam/Xbox save discovery. Direct save/folder picking, recursive latest-save monitoring, native-resolution map-image display, and debounced refresh are implemented.
 - Add normalized projection to CLI/debug output.
-- Validate the native map-widget transform with independent in-game anchors.
+- Extend native map-widget projection validation with distant in-game anchors.
 
 Completed preparation: accepted projection scaled to the exported map and explicit comparison with the tentative game-bounds transform.
 
 Completed map reconstruction: marker-free game map rebuilt from three exported UI layers, orientation corrected, and compared pixel-for-pixel with the supplied in-game reference.
 
-Current validation gate: compare either projection against one visible in-game marker at default zoom and centered/full-map pan. The four before-save markers show a 23.11–36.75 texture-pixel separation between transforms.
+Completed local projection validation (2026-09-12): register the user's zoomed/panned 1.75× oak-lab screenshot against the native terrain outline. The exported-bounds projection agrees with the observed guide #22 icon center within 0.3 logical pixels; the old calibration is about 3.2 logical pixels too high. Rendering now uses exported bounds. Full-map screenshot edges are not required for local registration. Additional distant anchors remain desirable for broader validation.
 
 ## Completed — desktop save-map viewer
 

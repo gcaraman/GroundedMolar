@@ -4,7 +4,9 @@
     "name": "Grounded Wiki NG+ Milk Molar interactive map",
     "url": "https://grounded.fandom.com/wiki/Map:Ng_plus_molar",
     "retrieved": "2026-08-24",
-    "note": "Descriptions and displayed molar numbers are copied from each source marker popup. Repeated descriptions are retained because distinct marker pins can share the same guide text."
+    "audited": "2026-09-12",
+    "auditedRevisionId": 50346,
+    "note": "All 219 coordinates, categories and normalized descriptions were checked against source revision 50346. User-reviewed corrections set inside-pot to #14 and pot-rim to #15; the BBQ wall entry is corrected from #14 to #140 using its attached source image title. Optional matchedSpawnGuid fields bind reviewed hints to selected save spawns, including the eastern laser pair #34/#35 and user-reviewed wiki pairs #72/#73, #108/#109, #116/#118 and #218/#219; original guide coordinates are retained. Unbound matches remain approximate. See docs/MOLAR_GUIDE_AUDIT.md for coverage and unresolved collisions."
   },
   "coordinateSystem": {
     "width": 1254,
@@ -257,7 +259,7 @@
     },
     {
       "id": 29,
-      "number": 14,
+      "number": 140,
       "categoryId": 1,
       "guideX": 763.103709,
       "guideY": 303.634405,
@@ -701,7 +703,8 @@
       "categoryId": 2,
       "guideX": 769.038763,
       "guideY": 705.511273,
-      "description": "Inside the Pond Lab. Underwater in the submerged lab section leading to the battery backup terminal. Trapped behind four clay chunks"
+      "description": "Inside the Pond Lab. Underwater in the submerged lab section leading to the battery backup terminal. Trapped behind four clay chunks",
+      "matchedSpawnGuid": "879CB034-4B8A7958-C35589AA-EA0E8624"
     },
     {
       "id": 85,
@@ -709,7 +712,8 @@
       "categoryId": 2,
       "guideX": 769.036161,
       "guideY": 705.788205,
-      "description": "Inside the Pond Lab. Underwater in the submerged lab section leading to the battery backup terminal. Trapped behind four clay chunks"
+      "description": "Inside the Pond Lab. Underwater in the submerged lab section leading to the battery backup terminal. Trapped behind four clay chunks",
+      "matchedSpawnGuid": "0676F394-4C8EE790-33AE8480-31CFC569"
     },
     {
       "id": 86,
@@ -805,7 +809,8 @@
       "categoryId": 1,
       "guideX": 609.115194,
       "guideY": 285.663224,
-      "description": "On the supporting beam of the picnic table"
+      "description": "On the supporting beam of the picnic table",
+      "matchedSpawnGuid": "D4138527-4D57599C-937CBA80-0FA0AA16"
     },
     {
       "id": 98,
@@ -813,7 +818,8 @@
       "categoryId": 1,
       "guideX": 609.601776,
       "guideY": 268.65729,
-      "description": "Inside the honey pot on the picnic table"
+      "description": "Inside the honey pot on the picnic table",
+      "matchedSpawnGuid": "A61209D1-40548155-F232DC96-FA1D7BDB"
     },
     {
       "id": 99,
@@ -937,7 +943,8 @@
     },
     {
       "id": 114,
-      "number": 15,
+      "number": 14,
+      "matchedSpawnGuid": "18EA8183-4CDD82C5-08A72881-AB91DE90",
       "categoryId": 1,
       "guideX": 658.030404,
       "guideY": 604.299717,
@@ -945,7 +952,8 @@
     },
     {
       "id": 115,
-      "number": 14,
+      "number": 15,
+      "matchedSpawnGuid": "28F9F130-484AB149-015F179D-E455D6E2",
       "categoryId": 1,
       "guideX": 664.39742,
       "guideY": 617.024557,
@@ -1301,7 +1309,8 @@
       "categoryId": 3,
       "guideX": 340.184458,
       "guideY": 227.087361,
-      "description": "Inside the salt mines"
+      "description": "Inside the salt mines",
+      "matchedSpawnGuid": "A9534D87-46471999-D12955B9-840B10BD"
     },
     {
       "id": 160,
@@ -1309,7 +1318,8 @@
       "categoryId": 3,
       "guideX": 350.441125,
       "guideY": 234.863652,
-      "description": "In the Sandbox Lab Outpost. Requires Asst Manager Keycard"
+      "description": "In the Sandbox Lab Outpost. Requires Asst Manager Keycard",
+      "matchedSpawnGuid": "E9C67113-4D613D18-F58FB089-66BE5191"
     },
     {
       "id": 161,
@@ -1578,6 +1588,7 @@
     {
       "id": 194,
       "number": 107,
+      "matchedSpawnGuid": "68F5AEEE-45B085C3-C080948C-6C4F5127",
       "categoryId": 3,
       "guideX": 403.296055,
       "guideY": 561.333852,
@@ -1586,6 +1597,7 @@
     {
       "id": 195,
       "number": 105,
+      "matchedSpawnGuid": "939721B7-4C6C3B46-B69DD1B8-A89E4A78",
       "categoryId": 1,
       "guideX": 416.297988,
       "guideY": 557.834699,
@@ -1682,6 +1694,7 @@
     {
       "id": 207,
       "number": 35,
+      "matchedSpawnGuid": "624F5ABC-4DC959A0-B9243CBB-7A835281",
       "categoryId": 1,
       "guideX": 517.802822,
       "guideY": 742.515248,
@@ -1690,6 +1703,7 @@
     {
       "id": 208,
       "number": 34,
+      "matchedSpawnGuid": "7E4EE2A8-42E257C8-97A374B2-4C0256D4",
       "categoryId": 1,
       "guideX": 519.405592,
       "guideY": 734.562223,
@@ -1757,7 +1771,8 @@
       "categoryId": 3,
       "guideX": 1173.796051,
       "guideY": 726.905857,
-      "description": "In the Brawny Bin, between the game box and the cardboard box"
+      "description": "In the Brawny Bin, between the game box and the cardboard box",
+      "matchedSpawnGuid": "9B5FFE39-496231A0-8AB36BB2-43255BB4"
     },
     {
       "id": 217,
@@ -1765,7 +1780,8 @@
       "categoryId": 3,
       "guideX": 1150.544992,
       "guideY": 726.633129,
-      "description": "In the Brawny Bin, inside the blue waffle ball by the field station"
+      "description": "In the Brawny Bin, inside the blue waffle ball by the field station",
+      "matchedSpawnGuid": "CD10B7F4-43680B03-C33215A6-F38058D6"
     },
     {
       "id": 218,

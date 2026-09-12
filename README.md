@@ -30,7 +30,7 @@ The project targets .NET 10 and pins SDK 10.0.303 plus Windows Desktop Runtime 1
 
 ## Public Windows release
 
-Version 1.0.1 uses a Store-signed x64 MSIX for Microsoft Store and a separately signed offline x64 MSI inside the Nexus/direct-download ZIP. Both channels must be built from the same source revision with the same product version and user-visible release notes, but the unsigned pre-certification MSIX must never be distributed through Nexus. Run `scripts/Publish-StoreMsix.ps1` for the Store submission package and `scripts/Publish-Release.ps1` with a publicly trusted signing identity for the Nexus/direct release. Running the latter without signing parameters creates only clearly labeled `UNSIGNED-DO-NOT-PUBLISH` rehearsal artifacts. See [docs/RELEASE_1.0.1.md](docs/RELEASE_1.0.1.md), [docs/NEXUS_RELEASE.md](docs/NEXUS_RELEASE.md), and [docs/MICROSOFT_STORE_RELEASE.md](docs/MICROSOFT_STORE_RELEASE.md).
+Version 1.0.2 is a self-contained Windows x64 portable ZIP for GitHub and Nexus Mods. Extract the entire archive and run `MolarMap.exe`; no installer is required. The portable build is unsigned, matching the previous portable release. Build it with `pwsh -File scripts/Publish-Portable.ps1 -Version 1.0.2`. See [release notes](docs/RELEASE_1.0.2.md). The separate signed MSI and Store MSIX pipelines remain available for those distribution channels.
 
 End users run the MSI and launch MolarMap from the Start menu; no separate .NET installation, mod manager, game-file modification, account, or network connection is required.
 
