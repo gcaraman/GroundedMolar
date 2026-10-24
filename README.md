@@ -26,13 +26,15 @@ dotnet run --project src/GroundedMolar.App
 - `tests/GroundedMolar.Tests` — dependency-free regression runner
 - `docs` — specification, roadmap, evidence log
 
-The project targets .NET 10 and pins SDK 10.0.303 plus Windows Desktop Runtime 10.0.11 as the current minimum secure self-contained release baseline.
+The project targets .NET 10 and pins SDK 10.0.303 plus Windows Desktop Runtime 10.0.13 as the current minimum secure self-contained release baseline.
+
+Run `pwsh -File scripts/Test-Repo.ps1` for the build and regression checks with workspace-isolated .NET and NuGet state.
 
 ## Public Windows release
 
-Version 1.0.2 is a self-contained Windows x64 portable ZIP for GitHub and Nexus Mods. Extract the entire archive and run `MolarMap.exe`; no installer is required. The portable build is unsigned, matching the previous portable release. Build it with `pwsh -File scripts/Publish-Portable.ps1 -Version 1.0.2`. See [release notes](docs/RELEASE_1.0.2.md). The separate signed MSI and Store MSIX pipelines remain available for those distribution channels.
+Version 1.0.3 is a self-contained Windows x64 portable ZIP for GitHub and Nexus Mods. Extract the entire archive and run `MolarMap.exe`; no installer is required. The portable build is unsigned, matching the previous portable release. Build it with `pwsh -File scripts/Publish-Portable.ps1 -Version 1.0.3`. See [release notes](docs/RELEASE_1.0.3.md). The separate signed MSI and Store MSIX pipelines remain available for those distribution channels.
 
-End users run the MSI and launch MolarMap from the Start menu; no separate .NET installation, mod manager, game-file modification, account, or network connection is required.
+For the portable release, extract the ZIP and launch `MolarMap.exe`; no separate .NET installation, mod manager, game-file modification, account, or network connection is required.
 
 ## Grounded save decoding
 

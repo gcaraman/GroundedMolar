@@ -1,8 +1,8 @@
 # Nexus Mods release preparation
 
-## Version 1.0.2 portable release
+## Version 1.0.3 portable release
 
-Upload `artifacts/portable/1.0.2/MolarMap-1.0.2.zip` as version **1.0.2**. This is the same unsigned self-contained portable ZIP distributed on GitHub. Extract all files and run `MolarMap.exe`; no MSI or installation is involved. Use `docs/RELEASE_1.0.2.md` for the changelog and publish the hash from `SHA256SUMS.txt`. Local error logs are stored beside the app under `logs`, with a LocalAppData fallback. The signed-installer checklist below describes the separate MSI channel, not this portable release.
+Upload `artifacts/portable/1.0.3/MolarMap-1.0.3.zip` as version **1.0.3**. This is the same unsigned self-contained portable ZIP distributed on GitHub. Extract all files and run `MolarMap.exe`; no MSI or installation is involved. Use `docs/RELEASE_1.0.3.md` for the changelog and publish the hash from `SHA256SUMS.txt`. Local error logs are stored beside the app under `logs`, with a LocalAppData fallback. The signed-installer checklist below describes the separate MSI channel, not this portable release.
 
 ## Signed MSI channel reference
 
@@ -64,7 +64,7 @@ Use the Nexus permission controls consistently with `LICENSE.txt` and `THIRD_PAR
 
 1. Confirm `dotnet --info` selects SDK 10.0.303 or a later patched SDK and run `dotnet build` plus `dotnet run --project tests/GroundedMolar.Tests`.
 2. Run the signed production command in `docs/RELEASE_1.0.1.md`. Never upload an artifact containing `UNSIGNED-DO-NOT-PUBLISH` or a manifest with `productionReady: false`.
-   The script publishes an inspectable self-contained payload, signs the exact helper before compiling its hash pin, builds the common MSI, and refuses production completion unless every PE and the MSI has a valid trusted signature. It also requires the actual `PresentationCore.dll`, `PresentationFramework.dll`, and `WindowsBase.dll` product versions to be 10.0.11 or newer.
+   The script publishes an inspectable self-contained payload, signs the exact helper before compiling its hash pin, builds the common MSI, and refuses production completion unless every PE and the MSI has a valid trusted signature. It also requires the actual `PresentationCore.dll`, `PresentationFramework.dll`, and `WindowsBase.dll` product versions to be 10.0.13 or newer.
 3. Test the exact MSI from the extracted ZIP on a clean Windows 10/11 x64 machine with no .NET SDK/runtime installed. Confirm silent install and uninstall as well as interactive launch.
 4. Test one supported save and one deliberately unsupported input; confirm the latter renders no markers.
 5. Confirm the app creates only `%LOCALAPPDATA%\MolarMap\settings.json` and temporary decoder files that are removed after use. Existing `%LOCALAPPDATA%\GroundedMolar\settings.json` preferences may be read once for migration.

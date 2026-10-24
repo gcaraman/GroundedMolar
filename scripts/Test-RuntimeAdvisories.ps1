@@ -1,6 +1,6 @@
 param(
     [string]$RuntimePackage = 'Microsoft.WindowsDesktop.App.Runtime.win-x64',
-    [string]$RuntimeVersion = '10.0.11'
+    [string]$RuntimeVersion = '10.0.13'
 )
 
 $ErrorActionPreference = 'Stop'

@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PublishDirectory,
 
-    [Version]$MinimumVersion = '10.0.11'
+    [Version]$MinimumVersion = '10.0.13'
 )
 
 $ErrorActionPreference = 'Stop'

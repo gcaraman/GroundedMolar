@@ -11,13 +11,13 @@
     <Product>MolarMap</Product>
     <Description>Offline viewer for authoritative uncollected NG+ Milk Molar locations in Grounded saves.</Description>
     <Authors>MolarMap contributors</Authors>
-    <Version>1.0.2</Version>
-    <ApplicationVersion>1.0.2.0</ApplicationVersion>
+    <Version>1.0.3</Version>
+    <ApplicationVersion>1.0.3.0</ApplicationVersion>
     <Company>MolarMap contributors</Company>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <!-- Release security floor. Keep this synchronized with scripts/Test-PublishedRuntime.ps1. -->
-    <RuntimeFrameworkVersion>10.0.11</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion>10.0.13</RuntimeFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Release packaging supplies a signed copy and compiles its exact hash into GroundedMolar.Core. -->
